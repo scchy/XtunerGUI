@@ -12,7 +12,7 @@ from os.path import getsize as p_getsize
 from os.path import join as p_join
 import threading
 import time
-from download_utils import stop_thread, _split_repo, get_hf_cache_files, get_model_info, TOKEN
+from .download_utils import stop_thread, _split_repo, get_hf_cache_files, get_model_info, TOKEN
 os.environ['HF_ENDPOINT'] = 'https://hf-mirror.com'
 CUR_DIR = os.path.dirname(__file__)
 
