@@ -4,6 +4,7 @@
 # Func: 模型拉取到本地
 # ===========================================================================================
 import os
+import gradio as gr
 from tqdm.auto import tqdm
 from openxlab.model import download as ox_download
 from modelscope.hub.snapshot_download import snapshot_download
@@ -109,9 +110,10 @@ class xtunerModelDownload():
         self.__check_create_dir()
         self.mid_download_dir = self.final_out_path
     
-    def auto_download(self, tp=None):
+    def auto_download(self, progress=gr.Progress(track_tqdm=True), tp=None):
         self._t_download(self.loop_download, tp)
         self._t_start()
+        time.sleep(10)
         return self.final_out_path
 
     def loop_download(self, tp=None):
@@ -253,7 +255,7 @@ class xtunerModelDownload():
             self.bar_.close()
         except Exception as e:
             pass
-        return 
+        return "Done! Break Download"
 
 
 if __name__ == '__main__':

@@ -4,6 +4,7 @@
 # Func: 模型拉取到本地
 # ===========================================================================================
 import os
+import gradio as gr
 from tqdm.auto import tqdm
 from os.path import getsize as p_getsize
 from os.path import join as p_join
@@ -56,9 +57,10 @@ class xtunerDataDownload():
         self.__remove_final_files()
         self.__check_create_dir()
     
-    def auto_download(self):
+    def auto_download(self, progress=gr.Progress(track_tqdm=True)):
         self._t_download(self.safe_download)
         self._t_start()
+        time.sleep(10)
         return self.final_out_path
 
     def safe_download(self):
@@ -160,7 +162,7 @@ class xtunerDataDownload():
             self.bar_.close()
         except Exception as e:
             pass
-        return 
+        return "Done! Break Download"
 
 
 if __name__ == '__main__':

@@ -8,8 +8,7 @@ from appPrepare.files_prepare import DATA_DOWNLOAD_DIR, MODEL_DOWNLOAD_DIR
 from tqdm.auto import tqdm
 import gradio as gr
 
-tq = gr.Progress()
-model_name = None
+progress = gr.Progress(track_tqdm=True)
 
 def combine_message_and_history(message, chat_history):
     # 将聊天历史中的每个元素（假设是元组）转换为字符串
@@ -72,9 +71,9 @@ with gr.Blocks() as demo:
     with gr.Tab("基础训练"):
         with gr.Accordion(label='使用指南', open=False):
             gr.Markdown('## 流程图')
-            process = gr.Image(value='/mnt/d/xtuner/1.png',label='使用流程图',container=False,show_download_button=False )
+            # process = gr.Image(value='/mnt/d/xtuner/1.png',label='使用流程图',container=False,show_download_button=False )
             gr.Markdown('## 演示视频')
-            video_customer_introduction = gr.Video(label='Xtuner GUI用法演示',value='/mnt/d/xtuner/demo.mp4',interactive=False)
+            # video_customer_introduction = gr.Video(label='Xtuner GUI用法演示',value='/mnt/d/xtuner/demo.mp4',interactive=False)
         gr.Markdown("## 1. 本地路径设置")
         
         local_path = gr.Textbox(label='请上传所有文件保存的文件本地路径', info='将会在选择的路径下创建名为xxx的文件夹并将所有文件保存在此处')
@@ -85,24 +84,36 @@ with gr.Blocks() as demo:
         with gr.Row():
             ft_method = gr.Dropdown(choices=['qlora','自定义'],value='qlora',label = '微调方法', info='''请选择微调的方法''',interactive=True)
             with gr.Column():
-                model = gr.Dropdown(choices=['internlm', '自定义'],value='internlm/internlm-chat-7b',label = '模型', info='请选择配置文件对应的模型',interactive=True)
+                model = gr.Dropdown(choices=['internlm/internlm-chat-7b', '自定义'], value='internlm/internlm-chat-7b',label = '模型', info='请选择配置文件对应的模型',interactive=True)
                 DL_CLS = xtunerModelDownload(
-                    model_name=model, 
-                    put_path=MODEL_DOWNLOAD_DIR,
-                    tqdm_class=tq.tqdm
+                    model_name= model.value, 
+                    out_path=MODEL_DOWNLOAD_DIR,
+                    tqdm_class=tqdm
                 )
                 with gr.Row():
                     model_download_button = gr.Button('模型下载')
                     model_stop_download = gr.Button('取消下载')
-
-                    model_download_button.click(DL_CLS.auto_download, outputs=[model_name])
-                    model_stop_download.click(DL_CLS.break_download)
+                    model_path = gr.Textbox(label='下载详情')
+                    
+                    model_download_button.click(DL_CLS.auto_download, outputs=[model_path])
+                    model_stop_download.click(DL_CLS.break_download, outputs=[model_path])
 
             with gr.Column():            
-                dataset = gr.Dropdown(choices=['Medqa2019', '自定义'],value='Medqa2019',label = '数据集', info='请选择需要微调的数据集',interactive=True)
+                dataset = gr.Dropdown(choices=['shibing624/medical', '自定义'],value='shibing624/medical',label = '数据集', info='请选择需要微调的数据集',interactive=True)
+                DT_CLS = xtunerDataDownload(
+                    data_name= dataset.value, 
+                    out_path=DATA_DOWNLOAD_DIR,
+                    tqdm_class=tqdm
+                )
                 with gr.Row():
                     dataset_download_button = gr.Button('数据集下载')
                     dataset_stop_download = gr.Button('取消下载')
+                    data_path = gr.Textbox(label='下载详情')
+                    
+                    dataset_download_button.click(DT_CLS.auto_download, outputs=[data_path])
+                    dataset_stop_download.click(DT_CLS.break_download, outputs=[data_path])
+
+
         wrong_message1 = gr.Markdown()
         with gr.Row():
             with gr.Accordion(label="自定义模型",open=False):
