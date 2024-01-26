@@ -1,0 +1,28 @@
+OpenLMLab/internlm-7b
+OpenLMLab/internlm-20b
+OpenLMLab/internlm-chat-7b
+OpenLMLab/internlm-chat-20b
+
+shakechen/Llama-2-7b-chat   meta-llama/Llama-2-7b-chat
+--llama2_70b                  meta-llama/llama2-70b--
+shakechen/Llama-2-7b        meta-llama/Llama-2-7b
+skyline2006/llama-7b        huggyllama/llama-7b 
+
+baichuan-inc/Baichuan-7B-Chat
+baichuan-inc/Baichuan-13B-Base
+baichuan-inc/baichuan-7B
+baichuan-inc/Baichuan2-13B-Chat
+baichuan-inc/Baichuan2-7B-Chat
+baichuan-inc/Baichuan2-13B-Chat
+baichuan-inc/Baichuan2-13B-Base
+
+ZhipuAI/chatglm3-6b         THUDM/chatglm3-6b
+ZhipuAI/chatglm2-6b         THUDM/chatglm2-6b
+ZhipuAI/chatglm3-6b-base    THUDM/chatglm3-6b-base
+
+yi_34b
+01ai/Yi-6B   01-ai/Yi-6B  
+Qwen/Qwen-7B-Chat
+Qwen/Qwen-7B
+
+

@@ -1,0 +1,10 @@
+tqdm
+openxlab
+huggingface_hub==0.20.3
+modelscope
+transformers==4.34.0
+gradio==4.4.0
+unstructured==0.10.30
+markdown==3.3.7
+xtuner
+

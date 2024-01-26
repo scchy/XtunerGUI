@@ -1,0 +1,22 @@
+./data/CrimeKgAssitant清洗后_52k.json
+./data/arxiv_data.json
+./data/moss-003-sft-no-tools.jsonl
+./data/训练数据_带法律依据_92k.json
+
+
+ArmelR/stack-exchange-instruction
+HuggingFaceH4/CodeAlpaca_20K
+Open-Orca/OpenOrca  # 这个丰富的增强 FLAN 数据集尽可能地与 Orca 论文中概述的分布保持一致。它有助于生成高性能的模型检查点，是所有 NLP 研究人员和开发人员的宝贵资源！
+Skywork/SkyPile-150B # SkyPile-150B 是一个全面的大型中文数据集，专门用于大型语言模型的预训练。
+WizardLM/WizardLM_evol_instruct_V2_196k
+b-mc2/sql-create-context
+bigcode/starcoder
+burkelibbey/colors
+damo/MSAgent-Bench
+garage-bAInd/Open-Platypus
+mistralai/Mistral-7B-v0.1
+nampdn-ai/tiny-codes
+shibing624/medical
+silk-road/alpaca-data-gpt4-chinese
+tatsu-lab/alpaca
+timdettmers/openassistant-guanaco
