@@ -32,6 +32,19 @@ class xtunerModelDownload():
         self._break_flag = False
         self.remove_and_create()
         self.get_download_info()
+    
+    def reset(self, model_name):
+        self.remove_and_create()
+        print(f'reset({model_name})')
+        self.username, self.repository = _split_repo(model_name)
+        self.model_name = model_name
+        self.final_out_path = p_join(self.out_path, f'{self.username}_{self.repository}')
+        self.mid_download_dir = self.final_out_path
+        self._t_handle_dl = None
+        self._t_handle_pg = None
+        self._break_flag = False
+        self.remove_and_create()
+        self.get_download_info()
 
     def _username_map(self, tp):
         """username 映射

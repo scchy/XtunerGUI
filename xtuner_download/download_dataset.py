@@ -31,6 +31,19 @@ class xtunerDataDownload():
         self.remove_and_create()
         self.get_download_info()
 
+    def reset(self, data_name):
+        self.remove_and_create()
+        print(f'reset({data_name})')
+        self.username, self.repository = _split_repo(data_name)
+        self.data_name = data_name
+        self.final_out_path = p_join(self.out_path, f'dataset_{self.username}_{self.repository}')
+        self.mid_download_dir = self.final_out_path
+        self._t_handle_dl = None
+        self._t_handle_pg = None
+        self._break_flag = False
+        self.remove_and_create()
+        self.get_download_info()
+
     def get_download_info(self):
         self.total_MB, self.total_file_nums = get_data_info(self.data_name)
 

@@ -26,7 +26,7 @@ MODEL_LIST = [
     'meta-llama/Llama-2-7b-chat', 
     'meta-llama/llama2-70b', 
     'meta-llama/Llama-2-7b', 
-    'huggyllama/llama-7b ', 
+    'huggyllama/llama-7b', 
     'baichuan-inc/Baichuan-7B-Chat', 
     'baichuan-inc/Baichuan-13B-Base', 
     'baichuan-inc/baichuan-7B', 
@@ -38,7 +38,7 @@ MODEL_LIST = [
     'THUDM/chatglm2-6b', 
     'THUDM/chatglm3-6b-base', 
     '01-ai/Yi-24B', 
-    '01-ai/Yi-6B  ', 
+    '01-ai/Yi-6B', 
     'Qwen/Qwen-7B-Chat', 
     'Qwen/Qwen-7B', 
 ]

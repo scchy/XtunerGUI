@@ -86,31 +86,33 @@ with gr.Blocks() as demo:
             ft_method = gr.Dropdown(choices=['qlora','自定义'],value='qlora',label = '微调方法', info='''请选择微调的方法''',interactive=True)
             with gr.Column():
                 model = gr.Dropdown(choices=MODEL_LIST + ['自定义'], value='internlm/internlm-chat-7b',label = '模型', info='请选择配置文件对应的模型',interactive=True)
-                DL_CLS = xtunerModelDownload(
-                    model_name= model.value, 
+                DM_CLS = xtunerModelDownload(
+                    model_name=model.value,
                     out_path=MODEL_DOWNLOAD_DIR,
                     tqdm_class=tqdm
                 )
+                model.change(DM_CLS.reset, inputs=[model])
                 with gr.Row():
                     model_download_button = gr.Button('模型下载')
                     model_stop_download = gr.Button('取消下载')
                     model_path = gr.Textbox(label='下载详情')
                     
-                    model_download_button.click(DL_CLS.auto_download, outputs=[model_path])
-                    model_stop_download.click(DL_CLS.break_download, outputs=[model_path])
+                    model_download_button.click(DM_CLS.auto_download, outputs=[model_path])
+                    model_stop_download.click(DM_CLS.break_download, outputs=[model_path])
 
             with gr.Column():            
-                dataset = gr.Dropdown(choices=DATA_LIST + ['自定义'],value='shibing624/medical',label = '数据集', info='请选择需要微调的数据集',interactive=True)
+                dataset = gr.Dropdown(choices=DATA_LIST + ['自定义'], value='shibing624/medical',label = '数据集', info='请选择需要微调的数据集',interactive=True)
                 DT_CLS = xtunerDataDownload(
                     data_name= dataset.value, 
                     out_path=DATA_DOWNLOAD_DIR,
-                    tqdm_class=tqdm
+                    tqdm_class=tqdm 
                 )
+                dataset.change(DT_CLS.reset, inputs=[dataset])
                 with gr.Row():
                     dataset_download_button = gr.Button('数据集下载')
                     dataset_stop_download = gr.Button('取消下载')
                     data_path = gr.Textbox(label='下载详情')
-                    
+
                     dataset_download_button.click(DT_CLS.auto_download, outputs=[data_path])
                     dataset_stop_download.click(DT_CLS.break_download, outputs=[data_path])
 
