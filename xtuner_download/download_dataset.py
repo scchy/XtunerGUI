@@ -27,6 +27,7 @@ class xtunerDataDownload():
         self.mid_download_dir = self.final_out_path
         self._t_handle_dl = None
         self._t_handle_pg = None
+        self._break_flag = False
         self.remove_and_create()
         self.get_download_info()
 
@@ -58,9 +59,13 @@ class xtunerDataDownload():
         self.__check_create_dir()
     
     def auto_download(self, progress=gr.Progress(track_tqdm=True)):
+        time.sleep(3)
+        self._break_flag = False
         self._t_download(self.safe_download)
         # self._t_start()
         self.progress(progress=progress)
+        if self._break_flag:
+            return "Done! Data-Download had interrupted!"
         return self.final_out_path
 
     def safe_download(self):
@@ -162,7 +167,8 @@ class xtunerDataDownload():
             self.bar_.close()
         except Exception as e:
             pass
-        return "Done! Break Download"
+        self._break_flag = True
+        return "Done! Data-Download had interrupted!"
 
 
 if __name__ == '__main__':

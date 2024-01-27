@@ -29,6 +29,7 @@ class xtunerModelDownload():
         self.mid_download_dir = self.final_out_path
         self._t_handle_dl = None
         self._t_handle_pg = None
+        self._break_flag = False
         self.remove_and_create()
         self.get_download_info()
 
@@ -111,10 +112,13 @@ class xtunerModelDownload():
         self.mid_download_dir = self.final_out_path
     
     def auto_download(self, progress=gr.Progress(track_tqdm=True), tp=None):
+        self._break_flag = False
         self._t_download(self.loop_download, tp)
         # self._t_start(progress)
         # progress not use thread
         self.progress(progress=progress)
+        if self._break_flag:
+            return "Done! Model-Download had interrupted!"
         return self.final_out_path
 
     def loop_download(self, tp=None):
@@ -256,7 +260,8 @@ class xtunerModelDownload():
             self.bar_.close()
         except Exception as e:
             pass
-        return "Done! Break Download"
+        self._break_flag = True
+        return "Done! Model-Download had interrupted!"
 
 
 if __name__ == '__main__':
