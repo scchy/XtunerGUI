@@ -5,6 +5,7 @@
 from xtuner_download.download_model import xtunerModelDownload
 from xtuner_download.download_dataset import xtunerDataDownload
 from appPrepare.files_prepare import DATA_DOWNLOAD_DIR, MODEL_DOWNLOAD_DIR
+from appPrepare.list_prepare import DATA_LIST, MODEL_LIST
 from tqdm import tqdm
 import gradio as gr
 
@@ -84,7 +85,7 @@ with gr.Blocks() as demo:
         with gr.Row():
             ft_method = gr.Dropdown(choices=['qlora','自定义'],value='qlora',label = '微调方法', info='''请选择微调的方法''',interactive=True)
             with gr.Column():
-                model = gr.Dropdown(choices=['internlm/internlm-chat-7b', '自定义'], value='internlm/internlm-chat-7b',label = '模型', info='请选择配置文件对应的模型',interactive=True)
+                model = gr.Dropdown(choices=MODEL_LIST + ['自定义'], value='internlm/internlm-chat-7b',label = '模型', info='请选择配置文件对应的模型',interactive=True)
                 DL_CLS = xtunerModelDownload(
                     model_name= model.value, 
                     out_path=MODEL_DOWNLOAD_DIR,
@@ -99,7 +100,7 @@ with gr.Blocks() as demo:
                     model_stop_download.click(DL_CLS.break_download, outputs=[model_path])
 
             with gr.Column():            
-                dataset = gr.Dropdown(choices=['shibing624/medical', '自定义'],value='shibing624/medical',label = '数据集', info='请选择需要微调的数据集',interactive=True)
+                dataset = gr.Dropdown(choices=DATA_LIST + ['自定义'],value='shibing624/medical',label = '数据集', info='请选择需要微调的数据集',interactive=True)
                 DT_CLS = xtunerDataDownload(
                     data_name= dataset.value, 
                     out_path=DATA_DOWNLOAD_DIR,

@@ -121,7 +121,7 @@ class xtunerModelDownload():
             return "Done! Model-Download had interrupted!"
         return self.final_out_path
 
-    def loop_download(self, tp=None):
+    def loop_download(self, tp='speed'):
         if 'internlm' in self.model_name.lower():
             loop_list = [self.openxlab_download, self.modelscope_download, self.hf_download]
         elif tp == 'speed':
