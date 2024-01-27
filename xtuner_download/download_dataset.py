@@ -26,7 +26,7 @@ class xtunerDataDownload():
         self.final_out_path = p_join(out_path, f'dataset_{self.username}_{self.repository}')
         self.mid_download_dir = self.final_out_path
         self._t_handle_dl = None
-        self._t_handle_gp = None
+        self._t_handle_pg = None
         self.remove_and_create()
         self.get_download_info()
 
@@ -59,8 +59,8 @@ class xtunerDataDownload():
     
     def auto_download(self, progress=gr.Progress(track_tqdm=True)):
         self._t_download(self.safe_download)
-        self._t_start()
-        time.sleep(10)
+        # self._t_start()
+        self.progress(progress=progress)
         return self.final_out_path
 
     def safe_download(self):
@@ -115,7 +115,7 @@ class xtunerDataDownload():
         cached_mb1 = sum([p_getsize(f) for f in downloaded_files])
         return downloaded_files, cached_mb1
 
-    def progress(self):
+    def progress(self, progress=None):
         hf_cache_dir = p_join(self.final_out_path, 'cache')
         self.bar_ = self.tqdm_class(total=round(self.total_MB*1024**2, 3), unit='iB', unit_scale=True)
         self.bar_.set_description('TotalProgress')

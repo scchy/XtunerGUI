@@ -5,7 +5,7 @@
 from xtuner_download.download_model import xtunerModelDownload
 from xtuner_download.download_dataset import xtunerDataDownload
 from appPrepare.files_prepare import DATA_DOWNLOAD_DIR, MODEL_DOWNLOAD_DIR
-from tqdm.auto import tqdm
+from tqdm import tqdm
 import gradio as gr
 
 progress = gr.Progress(track_tqdm=True)

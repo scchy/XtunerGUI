@@ -28,7 +28,7 @@ class xtunerModelDownload():
         self.final_out_path = p_join(out_path, f'{self.username}_{self.repository}')
         self.mid_download_dir = self.final_out_path
         self._t_handle_dl = None
-        self._t_handle_gp = None
+        self._t_handle_pg = None
         self.remove_and_create()
         self.get_download_info()
 
@@ -112,8 +112,9 @@ class xtunerModelDownload():
     
     def auto_download(self, progress=gr.Progress(track_tqdm=True), tp=None):
         self._t_download(self.loop_download, tp)
-        self._t_start()
-        time.sleep(10)
+        # self._t_start(progress)
+        # progress not use thread
+        self.progress(progress=progress)
         return self.final_out_path
 
     def loop_download(self, tp=None):
@@ -187,15 +188,15 @@ class xtunerModelDownload():
             return size_same &  file_same
         return True
     
-    def _t_start(self):
-        self._t_handle_pg = threading.Thread(target=self.progress, name='X-model-progress', daemon=True)
+    def _t_start(self, pg=None):
+        self._t_handle_pg = threading.Thread(target=self.progress, args=(pg,), name='X-model-progress', daemon=True)
         self._t_handle_pg.start()
         
     def _t_download(self, d_func, tp):
         self._t_handle_dl = threading.Thread(target=d_func, args=(tp,) ,name='X-model-download', daemon=True)
         self._t_handle_dl.start()
 
-    def progress(self):        
+    def progress(self, progress=None):        
         model_scope_cache_dir = p_join(self.out_path, 'temp')
         hf_cache_dir = p_join(self.final_out_path, 'cache')
         self.bar_ = self.tqdm_class(total=round(self.total_MB*1024**2, 3), unit='iB', unit_scale=True)
