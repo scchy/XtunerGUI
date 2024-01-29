@@ -3,4 +3,7 @@
 /xtuner_run/__pycache__
 /appPrepare/__pycache__
 /appPrepare/tmp
+/appPrepare/work_dir
 /work_dir
+/appPrepare/download_cache
+

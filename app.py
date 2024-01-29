@@ -5,7 +5,7 @@
 from xtuner_download.download_model import xtunerModelDownload
 from xtuner_download.download_dataset import xtunerDataDownload
 from xtuner_run.train import quickTrain
-from appPrepare.files_prepare import DATA_DOWNLOAD_DIR, MODEL_DOWNLOAD_DIR, CUR_PATH
+from appPrepare.files_prepare import DATA_DOWNLOAD_DIR, MODEL_DOWNLOAD_DIR, CUR_PATH, WORK_DIR
 from appPrepare.list_prepare import DATA_LIST, MODEL_LIST
 from tqdm import tqdm
 import gradio as gr
@@ -189,7 +189,7 @@ with gr.Blocks() as demo:
         TR_CLS = quickTrain(
             model_name_or_path=model_path.value,
             dataset_name_or_path=data_path.value,
-            work_dir=local_path.value,
+            work_dir=f'{local_path.value}/work_dir',
             xtuner_type=ft_method.value
         )
         model.change(TR_CLS.set_model_path, inputs=[model])

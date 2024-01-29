@@ -181,8 +181,10 @@ class quickTrain:
         self.xtuner_type = xtuner_type
         
     def set_work_dir(self, work_dir):
-        self.work_dir = work_dir
-        
+        self.work_dir = f'{work_dir}/work_dir'
+        if not os.path.exists(self.work_dir):
+            os.system(f'mkdir -p {self.work_dir}')
+
     def _t_start(self):
         self._t_handle_tr = threading.Thread(target=self._quick_train, name=f'X-train-{self.run_type}', daemon=True)
         self._t_handle_tr.start()

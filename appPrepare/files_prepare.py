@@ -11,6 +11,7 @@ def dir_create(_dir):
 
 MODEL_DOWNLOAD_DIR = dir_create(f"{CUR_PATH}/download_cache/model_download")
 DATA_DOWNLOAD_DIR = dir_create(f"{CUR_PATH}/download_cache/data_download")
+WORK_DIR = dir_create(f"{CUR_PATH}/work_dir")
 
 
 
