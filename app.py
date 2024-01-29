@@ -4,7 +4,8 @@
 
 from xtuner_download.download_model import xtunerModelDownload
 from xtuner_download.download_dataset import xtunerDataDownload
-from appPrepare.files_prepare import DATA_DOWNLOAD_DIR, MODEL_DOWNLOAD_DIR
+from xtuner_run.train import quickTrain
+from appPrepare.files_prepare import DATA_DOWNLOAD_DIR, MODEL_DOWNLOAD_DIR, CUR_PATH
 from appPrepare.list_prepare import DATA_LIST, MODEL_LIST
 from tqdm import tqdm
 import gradio as gr
@@ -77,13 +78,17 @@ with gr.Blocks() as demo:
             # video_customer_introduction = gr.Video(label='Xtuner GUI用法演示',value='/mnt/d/xtuner/demo.mp4',interactive=False)
         gr.Markdown("## 1. 本地路径设置")
         
-        local_path = gr.Textbox(label='请上传所有文件保存的文件本地路径', info='将会在选择的路径下创建名为xxx的文件夹并将所有文件保存在此处')
+        local_path = gr.Textbox(
+            label='请上传所有文件保存的文件本地路径', 
+            value=CUR_PATH,
+            info='将会在选择的路径下创建名为xxx的文件夹并将所有文件保存在此处'
+        )
         local_path_button = gr.Button('确认路径')
 
         gr.Markdown("## 2. 微调方法、模型、数据集设置")
         
         with gr.Row():
-            ft_method = gr.Dropdown(choices=['qlora','自定义'],value='qlora',label = '微调方法', info='''请选择微调的方法''',interactive=True)
+            ft_method = gr.Dropdown(choices=['qlora', 'lora', '自定义'], value='qlora',label = '微调方法', info='''请选择微调的方法''',interactive=True)
             with gr.Column():
                 model = gr.Dropdown(choices=MODEL_LIST + ['自定义'], value='internlm/internlm-chat-7b',label = '模型', info='请选择配置文件对应的模型',interactive=True)
                 DM_CLS = xtunerModelDownload(
@@ -96,9 +101,11 @@ with gr.Blocks() as demo:
                     model_download_button = gr.Button('模型下载')
                     model_stop_download = gr.Button('取消下载')
                     model_path = gr.Textbox(label='下载详情')
-                    
-                    model_download_button.click(DM_CLS.auto_download, outputs=[model_path])
-                    model_stop_download.click(DM_CLS.break_download, outputs=[model_path])
+
+                # model_download_information = gr.Markdown(label='模型下载信息')
+                # model_download_path = gr.Textbox(visible=False)
+                model_download_button.click(DM_CLS.auto_download, outputs=[model_path])
+                model_stop_download.click(DM_CLS.break_download, outputs=[model_path])
 
             with gr.Column():            
                 dataset = gr.Dropdown(choices=DATA_LIST + ['自定义'], value='shibing624/medical',label = '数据集', info='请选择需要微调的数据集',interactive=True)
@@ -113,9 +120,10 @@ with gr.Blocks() as demo:
                     dataset_stop_download = gr.Button('取消下载')
                     data_path = gr.Textbox(label='下载详情')
 
-                    dataset_download_button.click(DT_CLS.auto_download, outputs=[data_path])
-                    dataset_stop_download.click(DT_CLS.break_download, outputs=[data_path])
-
+                # dataset_download_information = gr.Markdown(label='数据集下载信息')
+                # dataset_download_path = gr.Textbox(visible=False)
+                dataset_download_button.click(DT_CLS.auto_download, outputs=[data_path])
+                dataset_stop_download.click(DT_CLS.break_download, outputs=[data_path])
 
         wrong_message1 = gr.Markdown()
         with gr.Row():
@@ -138,6 +146,7 @@ with gr.Blocks() as demo:
                 with gr.Accordion(label="数据集预览",open=False):
                     dataset_preview = gr.TextArea(label='数据集展示', info = '截取前n行内容，可用于对比原数据集格式。')
                     #dataset_preview = gr.JSON(label='数据集展示')
+
         gr.Markdown("## 3. 微调参数设置")
         with gr.Accordion(label="参数调整指南",open=False):
             gr.Markdown('#### 参数调整方式为...')
@@ -175,10 +184,26 @@ with gr.Blocks() as demo:
                     prompt_template_show = gr.TextArea(label='提示词模版展示')
         change_config_button = gr.Button('点击生成配置文件')
         wrong_message4 = gr.Markdown()
+
         gr.Markdown("## 4. 微调模型训练")
+        TR_CLS = quickTrain(
+            model_name_or_path=model_path.value,
+            dataset_name_or_path=data_path.value,
+            work_dir=local_path.value,
+            xtuner_type=ft_method.value
+        )
+        model.change(TR_CLS.set_model_path, inputs=[model])
+        dataset.change(TR_CLS.set_data_path, inputs=[dataset])
+        ft_method.change(TR_CLS.set_xtuner_type, inputs=[ft_method])
+        local_path_button.click(TR_CLS.set_work_dir, inputs=[local_path])
         with gr.Row():
             train_model = gr.Button('Xtuner！启动！',size='lg')
             stop_button = gr.Button('训练中断',size='lg')
+
+            work_path = gr.Textbox(label='work dir')
+            train_model.click(TR_CLS.quick_train, outputs=[work_path])
+            stop_button.click(TR_CLS.break_train, outputs=[work_path])
+    
         with gr.Accordion(label='模型续训', open=False):
             retry_path = gr.Textbox(label='原配置文件地址', info='请查询原配置文件地址并进行填入')
             retry_button = gr.Button('继续训练')

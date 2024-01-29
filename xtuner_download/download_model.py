@@ -30,6 +30,7 @@ class xtunerModelDownload():
         self._t_handle_dl = None
         self._t_handle_pg = None
         self._break_flag = False
+        self._get_info_flag = False
         self.remove_and_create()
         self.get_download_info()
     
@@ -43,6 +44,7 @@ class xtunerModelDownload():
         self._t_handle_dl = None
         self._t_handle_pg = None
         self._break_flag = False
+        self._get_info_flag = False
         self.remove_and_create()
         self.get_download_info()
 
@@ -77,7 +79,8 @@ class xtunerModelDownload():
             self.total_MB, self.total_file_nums = self._get_download_info()
         except Exception as e:
             self.total_MB, self.total_file_nums = get_model_info(self.model_name)
-    
+        self._get_info_flag = True
+        
     def _get_download_info(self):
         _api = HubApi()
         headers = {'user-agent': ModelScopeConfig.get_user_agent(user_agent=None, )}
@@ -125,6 +128,13 @@ class xtunerModelDownload():
         self.mid_download_dir = self.final_out_path
     
     def auto_download(self, progress=gr.Progress(track_tqdm=True), tp=None):
+        cnt_ = 0
+        while not self._get_info_flag:
+            cnt_ += 1
+            time.sleep(1)
+            if cnt_ == 30:
+                break
+        
         self._break_flag = False
         self._t_download(self.loop_download, tp)
         # self._t_start(progress)

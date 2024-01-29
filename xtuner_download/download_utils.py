@@ -14,7 +14,7 @@ import requests
 from tqdm.auto import tqdm
 from os.path import join as p_join
 from concurrent.futures import ThreadPoolExecutor
-from huggingface_hub.hf_api import HfApi, get_session, hf_raise_for_status
+from huggingface_hub.hf_api import HfApi
 
 os.environ['HF_ENDPOINT'] = 'https://hf-mirror.com'
 TOKEN = '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'

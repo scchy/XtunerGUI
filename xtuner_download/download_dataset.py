@@ -28,6 +28,7 @@ class xtunerDataDownload():
         self._t_handle_dl = None
         self._t_handle_pg = None
         self._break_flag = False
+        self._get_info_flag = False
         self.remove_and_create()
         self.get_download_info()
 
@@ -41,11 +42,13 @@ class xtunerDataDownload():
         self._t_handle_dl = None
         self._t_handle_pg = None
         self._break_flag = False
+        self._get_info_flag = False
         self.remove_and_create()
         self.get_download_info()
 
     def get_download_info(self):
         self.total_MB, self.total_file_nums = get_data_info(self.data_name)
+        self._get_info_flag = True
 
     def __check_create_dir(self):
         if not os.path.exists(self.out_path):
@@ -72,7 +75,14 @@ class xtunerDataDownload():
         self.__check_create_dir()
     
     def auto_download(self, progress=gr.Progress(track_tqdm=True)):
-        time.sleep(3)
+        # wait for info
+        cnt_ = 0
+        while not self._get_info_flag:
+            cnt_ += 1
+            time.sleep(1)
+            if cnt_ == 30:
+                break
+
         self._break_flag = False
         self._t_download(self.safe_download)
         # self._t_start()
