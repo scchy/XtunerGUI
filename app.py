@@ -203,6 +203,10 @@ with gr.Blocks() as demo:
             work_path = gr.Textbox(label='work dir')
             train_model.click(TR_CLS.quick_train, outputs=[work_path])
             stop_button.click(TR_CLS.break_train, outputs=[work_path])
+        with gr.Row():
+            log_txt = gr.Textbox(lines=10)
+            train_model.click(TR_CLS.start_log, outputs=[log_txt])
+            log_txt.change(TR_CLS.read_log, outputs=[log_txt])
     
         with gr.Accordion(label='模型续训', open=False):
             retry_path = gr.Textbox(label='原配置文件地址', info='请查询原配置文件地址并进行填入')

@@ -1,0 +1,157 @@
+2024/01/30 02:21:46 - mmengine - INFO - 
+------------------------------------------------------------
+System environment:
+    sys.platform: linux
+    Python: 3.10.9 (main, Mar  1 2023, 18:23:06) [GCC 11.2.0]
+    CUDA available: True
+    MUSA available: False
+    numpy_random_seed: 694586142
+    GPU 0: NVIDIA GeForce RTX 4070 Ti
+    CUDA_HOME: /usr/local/cuda-12.0
+    NVCC: Not Available
+    GCC: gcc (Ubuntu 11.4.0-1ubuntu1~22.04) 11.4.0
+    PyTorch: 2.1.2+cu121
+    PyTorch compiling details: PyTorch built with:
+  - GCC 9.3
+  - C++ Version: 201703
+  - Intel(R) oneAPI Math Kernel Library Version 2022.2-Product Build 20220804 for Intel(R) 64 architecture applications
+  - Intel(R) MKL-DNN v3.1.1 (Git Hash 64f6bcbcbab628e96f33a62c3e975f8535a7bde4)
+  - OpenMP 201511 (a.k.a. OpenMP 4.5)
+  - LAPACK is enabled (usually provided by MKL)
+  - NNPACK is enabled
+  - CPU capability usage: AVX2
+  - CUDA Runtime 12.1
+  - NVCC architecture flags: -gencode;arch=compute_50,code=sm_50;-gencode;arch=compute_60,code=sm_60;-gencode;arch=compute_70,code=sm_70;-gencode;arch=compute_75,code=sm_75;-gencode;arch=compute_80,code=sm_80;-gencode;arch=compute_86,code=sm_86;-gencode;arch=compute_90,code=sm_90
+  - CuDNN 8.9.2
+  - Magma 2.6.1
+  - Build settings: BLAS_INFO=mkl, BUILD_TYPE=Release, CUDA_VERSION=12.1, CUDNN_VERSION=8.9.2, CXX_COMPILER=/opt/rh/devtoolset-9/root/usr/bin/c++, CXX_FLAGS= -D_GLIBCXX_USE_CXX11_ABI=0 -fabi-version=11 -fvisibility-inlines-hidden -DUSE_PTHREADPOOL -DNDEBUG -DUSE_KINETO -DLIBKINETO_NOROCTRACER -DUSE_FBGEMM -DUSE_QNNPACK -DUSE_PYTORCH_QNNPACK -DUSE_XNNPACK -DSYMBOLICATE_MOBILE_DEBUG_HANDLE -O2 -fPIC -Wall -Wextra -Werror=return-type -Werror=non-virtual-dtor -Werror=bool-operation -Wnarrowing -Wno-missing-field-initializers -Wno-type-limits -Wno-array-bounds -Wno-unknown-pragmas -Wno-unused-parameter -Wno-unused-function -Wno-unused-result -Wno-strict-overflow -Wno-strict-aliasing -Wno-stringop-overflow -Wno-psabi -Wno-error=pedantic -Wno-error=old-style-cast -Wno-invalid-partial-specialization -Wno-unused-private-field -Wno-aligned-allocation-unavailable -Wno-missing-braces -fdiagnostics-color=always -faligned-new -Wno-unused-but-set-variable -Wno-maybe-uninitialized -fno-math-errno -fno-trapping-math -Werror=format -Werror=cast-function-type -Wno-stringop-overflow, LAPACK_INFO=mkl, PERF_WITH_AVX=1, PERF_WITH_AVX2=1, PERF_WITH_AVX512=1, TORCH_DISABLE_GPU_ASSERTS=ON, TORCH_VERSION=2.1.2, USE_CUDA=ON, USE_CUDNN=ON, USE_EXCEPTION_PTR=1, USE_GFLAGS=OFF, USE_GLOG=OFF, USE_MKL=ON, USE_MKLDNN=ON, USE_MPI=OFF, USE_NCCL=1, USE_NNPACK=ON, USE_OPENMP=ON, USE_ROCM=OFF, 
+
+    TorchVision: 0.16.2+cu121
+    OpenCV: 4.7.0
+    MMEngine: 0.10.3
+
+Runtime environment:
+    cudnn_benchmark: False
+    mp_cfg: {'mp_start_method': 'fork', 'opencv_num_threads': 0}
+    dist_cfg: {'backend': 'nccl'}
+    seed: 694586142
+    deterministic: False
+    Distributed launcher: none
+    Distributed training: False
+    GPU number: 1
+------------------------------------------------------------
+
+2024/01/30 02:21:46 - mmengine - INFO - Config:
+custom_hooks = [
+    dict(
+        tokenizer=dict(
+            padding_side='right',
+            pretrained_model_name_or_path='',
+            trust_remote_code=True,
+            type='transformers.AutoTokenizer.from_pretrained'),
+        type='xtuner.engine.DatasetInfoHook'),
+    dict(
+        evaluation_inputs=[
+            '请给我介绍五个上海的景点',
+            'Please tell me five scenic spots in Shanghai',
+        ],
+        every_n_iters=500,
+        prompt_template='xtuner.utils.PROMPT_TEMPLATE.internlm_chat',
+        system='',
+        tokenizer=dict(
+            padding_side='right',
+            pretrained_model_name_or_path='',
+            trust_remote_code=True,
+            type='transformers.AutoTokenizer.from_pretrained'),
+        type='xtuner.engine.EvaluateChatHook'),
+]
+default_hooks = dict(
+    checkpoint=dict(interval=1, type='mmengine.hooks.CheckpointHook'),
+    logger=dict(interval=10, type='mmengine.hooks.LoggerHook'),
+    param_scheduler=dict(type='mmengine.hooks.ParamSchedulerHook'),
+    sampler_seed=dict(type='mmengine.hooks.DistSamplerSeedHook'),
+    timer=dict(type='mmengine.hooks.IterTimerHook'))
+env_cfg = dict(
+    cudnn_benchmark=False,
+    dist_cfg=dict(backend='nccl'),
+    mp_cfg=dict(mp_start_method='fork', opencv_num_threads=0))
+launcher = 'none'
+log_level = 'INFO'
+model = dict(
+    llm=dict(
+        pretrained_model_name_or_path='',
+        quantization_config=dict(
+            bnb_4bit_compute_dtype='torch.float16',
+            bnb_4bit_quant_type='nf4',
+            bnb_4bit_use_double_quant=True,
+            llm_int8_has_fp16_weight=False,
+            llm_int8_threshold=6.0,
+            load_in_4bit=True,
+            load_in_8bit=False,
+            type='transformers.BitsAndBytesConfig'),
+        torch_dtype='torch.float16',
+        trust_remote_code=True,
+        type='transformers.AutoModelForCausalLM.from_pretrained'),
+    lora=dict(
+        bias='none',
+        lora_alpha=16,
+        lora_dropout=0.1,
+        r=64,
+        task_type='CAUSAL_LM',
+        type='peft.LoraConfig'),
+    type='xtuner.model.SupervisedFinetune')
+optim_wrapper = dict(
+    accumulative_counts=16,
+    clip_grad=dict(error_if_nonfinite=False, max_norm=1),
+    dtype='float16',
+    loss_scale='dynamic',
+    optimizer=dict(
+        betas=(
+            0.9,
+            0.999,
+        ),
+        lr=0.0002,
+        type='bitsandbytes.optim.PagedAdamW32bit',
+        weight_decay=0),
+    type='mmengine.optim.AmpOptimWrapper')
+param_scheduler = dict(
+    T_max=3,
+    begin=0.09,
+    by_epoch=True,
+    convert_to_iter_based=True,
+    eta_min=0.0,
+    type='mmengine.optim.CosineAnnealingLR')
+randomness = dict(deterministic=False, seed=None)
+resume = False
+test_cfg = None
+test_dataloader = None
+test_evaluator = None
+train_cfg = dict(by_epoch=True, max_epochs=3, val_interval=1)
+train_dataloader = dict(
+    batch_size=1,
+    collate_fn=dict(type='xtuner.dataset.collate_fns.default_collate_fn'),
+    dataset=dict(
+        dataset=dict(path='', type='datasets.load_dataset'),
+        dataset_map_fn=None,
+        max_length=2048,
+        pack_to_max_length=True,
+        remove_unused_columns=True,
+        shuffle_before_pack=True,
+        template_map_fn=dict(
+            template='xtuner.utils.PROMPT_TEMPLATE.internlm_chat',
+            type='xtuner.dataset.map_fns.template_map_fn_factory'),
+        tokenizer=dict(
+            padding_side='right',
+            pretrained_model_name_or_path='',
+            trust_remote_code=True,
+            type='transformers.AutoTokenizer.from_pretrained'),
+        type='xtuner.dataset.process_hf_dataset'),
+    num_workers=0,
+    sampler=dict(shuffle=True, type='mmengine.dataset.DefaultSampler'))
+val_cfg = None
+val_dataloader = None
+val_evaluator = None
+visualizer = None
+work_dir = '/home/scc/sccWork/myGitHub/XtunerGUI/appPrepare'
+
+2024/01/30 02:21:47 - mmengine - WARNING - Failed to search registry with scope "mmengine" in the "builder" registry tree. As a workaround, the current "builder" registry in "xtuner" is used to build instance. This may cause unexpected failure when running the built modules. Please check whether "mmengine" is a correct scope, or whether the registry is initialized.

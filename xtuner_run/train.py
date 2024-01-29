@@ -24,7 +24,7 @@ from transformers import (AutoModelForCausalLM, AutoTokenizer,
 from xtuner.model import SupervisedFinetune
 from xtuner.apis.datasets import alpaca_data_collator, alpaca_dataset
 from mmengine.runner import Runner
-
+import time
 
 def safe_load_data(file):
     tp = file.split('.')[-1]
@@ -163,7 +163,14 @@ class quickTrain:
         self.work_dir = work_dir
         self._break_flag = False
         self._t_handle_tr = None
+        self.log_file = None
     
+    def get_log_path(self):
+        list_ =  sorted([i for i in os.listdir(self.work_dir) if '.' not in i])
+        dir_name = list_[-2] if  'last_' in list_[-1] else list_[-1]
+        self.log_file = os.path.join(self.work_dir, dir_name, f'{dir_name}.log')
+        self.bf_mt = os.stat(self.log_file).st_mtime
+        
     def set_model_path(self, model_path):
         self.model_name_or_path = model_path
     
@@ -179,16 +186,33 @@ class quickTrain:
     def _t_start(self):
         self._t_handle_tr = threading.Thread(target=self._quick_train, name=f'X-train-{self.run_type}', daemon=True)
         self._t_handle_tr.start()
-        self._t_handle_tr.join()
 
     def _quick_train(self, progress=gr.Progress(track_tqdm=True)):
         if self.run_type == 'mmengine':
             return mm_run(self.model_name_or_path, self.dataset_name_or_path, self.work_dir, self.xtuner_type)
         return hf_run(self.model_name_or_path, self.dataset_name_or_path, self.work_dir, self.xtuner_type)
     
+    def read_log(self):  
+        time.sleep(1)
+        now_mt = os.stat(self.log_file).st_mtime
+        with open(self.log_file , 'r') as f:
+            read_res = f.read_lines()
+        read_res = ''.join(read_res[-20:])
+        if now_mt == self.bf_mt:
+            return read_res
+        return read_res
+    
+    def start_log(self):
+        time.sleep(20)
+        return "Start Training"
+
     def quick_train(self, progress=gr.Progress(track_tqdm=True)):
+        self.log_file = None
         self._break_flag = False
         self._t_start()
+        time.sleep(20)
+        self.get_log_path()
+        self._t_handle_tr.join()
         if self._break_flag:
             return "Done! Xtuner had interrupted!"
         return self.final_out_path
