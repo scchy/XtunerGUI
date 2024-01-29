@@ -177,7 +177,7 @@ class quickTrain:
         self.work_dir = work_dir
         
     def _t_start(self):
-        self._t_handle_tr = threading.Thread(target=self.quick_train, name=f'X-train-{self.run_type}', daemon=True)
+        self._t_handle_tr = threading.Thread(target=self._quick_train, name=f'X-train-{self.run_type}', daemon=True)
         self._t_handle_tr.start()
         self._t_handle_tr.join()
 
