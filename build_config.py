@@ -174,8 +174,11 @@ kwargs = dict(
     prompt_template='internlm2_chat'
     )
 
+
 def build_and_save_config(config_file_path, **kwargs):
     cfg = build_config(**kwargs)
     cfg.dump(config_file_path)
 
-build_and_save_config('./config.py', **kwargs)
+
+if __name__ == '__main__':
+    build_and_save_config('./config.py', **kwargs)
