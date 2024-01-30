@@ -23,7 +23,7 @@ DATA2MAPFN = {
 
 """
 save_checkpoint_ratio -> save_checkpoint_interval
-accumlative_counts -> accumulative_counts
+accumulative_counts -> accumulative_counts
 新增 save_total_limit
 'bigcode/starcoder' 不是DATA_LIST 
 """
@@ -77,10 +77,10 @@ def set_data_related(cfg, dataset, is_custom_dataset, prompt_template, max_lengt
 
 
 def set_scheduler_optimizer_related(
-        cfg, batch_size_per_device, accumlative_counts, dataloader_num_workers,
+        cfg, batch_size_per_device, accumulative_counts, dataloader_num_workers,
         max_epochs, optim_type, lr, beta1, beta2, weight_decay, max_norm, warmup_ratio):
     traverse_keys(cfg._cfg_dict, ('batch_size', ), batch_size_per_device)
-    traverse_keys(cfg._cfg_dict, ('accumulative_counts', ), accumlative_counts)
+    traverse_keys(cfg._cfg_dict, ('accumulative_counts', ), accumulative_counts)
     traverse_keys(cfg._cfg_dict, ('dataloader_num_workers', 'num_workers'), dataloader_num_workers)
 
     traverse_keys(cfg._cfg_dict, ('max_epochs', 'T_max'), max_epochs)
@@ -122,7 +122,7 @@ def set_evaluate_related(cfg, evaluation_freq, evaluation_system_prompt, evaluat
 
 def build_config(
         ft_method, model_path, dataset, is_custom_dataset, deepspeed, lr, warmup_ratio, batch_size_per_device,
-        accumlative_counts, num_GPU, max_length, pack_to_max_length, max_epochs, save_checkpoint_interval, save_total_limit,
+        accumulative_counts, num_GPU, max_length, pack_to_max_length, max_epochs, save_checkpoint_interval, save_total_limit,
         evaluation_freq, evaluation_system_prompt, evaluation_input1, evaluation_input2,
         optim_type, weight_decay, max_norm, dataloader_num_workers, beta1, beta2, 
         prompt_template):
@@ -137,7 +137,7 @@ def build_config(
 
     set_model_related(cfg, model_path)
     set_data_related(cfg, dataset, is_custom_dataset, prompt_template, max_length, pack_to_max_length)
-    set_scheduler_optimizer_related(cfg, batch_size_per_device, accumlative_counts, dataloader_num_workers,
+    set_scheduler_optimizer_related(cfg, batch_size_per_device, accumulative_counts, dataloader_num_workers,
         max_epochs, optim_type, lr, beta1, beta2, weight_decay, max_norm, warmup_ratio)
     set_checkpoint_related(cfg, save_checkpoint_interval, save_total_limit)
     set_evaluate_related(cfg, evaluation_freq, evaluation_system_prompt, evaluation_input1, evaluation_input2)
@@ -154,7 +154,7 @@ kwargs = dict(
     lr=2e-5, 
     warmup_ratio=0.03, 
     batch_size_per_device=1, 
-    accumlative_counts=2, 
+    accumulative_counts=2, 
     num_GPU=None,  # 与生成config无关
     max_length=2048,
     pack_to_max_length=True,
