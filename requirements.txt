@@ -1,8 +1,8 @@
 tqdm
+huggingface_hub
 openxlab==0.0.34
 gradio==4.4.0
 transformers==4.34.0
-huggingface_hub
 modelscope==1.11.0
 unstructured==0.10.30
 markdown==3.3.7
