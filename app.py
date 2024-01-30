@@ -151,12 +151,12 @@ with gr.Blocks() as demo:
             gr.Markdown('#### 参数调整方式为...')
         with gr.Tab("基础参数"):
             with gr.Row():
-                deepspeed = gr.Dropdown(choices=['None','zero1','zero2','zero3'],label='deepspeed算子', info='请选择deepspeed算子类型或关闭deepspeed')
-                lr = gr.Number(label='学习率(lr)', info= '请选择合适的学习率')
-                warmup_ratio = gr.Number(label='预热比', info='预热比例用于在训练初期逐渐增加学习率，以避免训练初期的不稳定性。')
-                batch_size_per_device = gr.Number(label='设备的样本个数(batch_size_per_device)', info='请选择每个设备的样本个数') 
-                accumulative_counts = gr.Number(label='梯度累计数', info='请选择合适的梯度累计数') 
-                save_total_limit = gr.Number(label='最多保存ckpt个数', info='控制保存ckpt的个数') 
+                deepspeed = gr.Dropdown(choices=['None','zero1','zero2','zero3'], label='deepspeed算子', value=None, info='请选择deepspeed算子类型或关闭deepspeed')
+                lr = gr.Number(label='学习率(lr)', value=2.0e-5, info= '请选择合适的学习率')
+                warmup_ratio = gr.Number(label='预热比', value=0.03, info='预热比例用于在训练初期逐渐增加学习率，以避免训练初期的不稳定性。')
+                batch_size_per_device = gr.Number(label='设备的样本个数(batch_size_per_device)', value=1, info='请选择每个设备的样本个数') 
+                accumulative_counts = gr.Number(label='梯度累计数', value=16, info='请选择合适的梯度累计数') 
+                save_total_limit = gr.Number(label='最多保存ckpt个数', value=2, info='控制保存ckpt的个数') 
             with gr.Row():
                 num_GPU = gr.Number(label='GPU的数量',info='请设置训练是所用GPU的数量')
                 max_length = gr.Number(label='数据集最大长度(max_length)', info='请设置训练数据最大长度')
@@ -164,22 +164,23 @@ with gr.Blocks() as demo:
                 max_epochs = gr.Number(label='训练迭代数(max_epochs)', info='请选择合适的训练迭代数')
                 save_checkpoint_interval = gr.Number(label='保存权重的间隔', info='请输入保存checkpoint的间隔')
             with gr.Accordion(label="测试问题模版", open=False):
-                evaluation_freq = gr.Number(label='验证对话效果频率(evaluation_freq)', info='请确定模型每多少轮需要验证一次对话效果')
-                evaluation_system_prompt = gr.Textbox(label = '系统提示词', info='请设置在评估模式下的System Prompt')
-                evaluation_input1 = gr.Textbox(label= '测试问题1', info='请输入第一个评估的问题')
-                evaluation_input2 = gr.Textbox(label='测试问题2', info='请输入第二个评估问题')
+                evaluation_freq = gr.Number(label='验证对话效果频率(evaluation_freq)', value=100, info='请确定模型每多少轮需要验证一次对话效果')
+                evaluation_system_prompt = gr.Textbox(label = '系统提示词', value='', info='请设置在评估模式下的System Prompt')
+                evaluation_input1 = gr.Textbox(label= '测试问题1',value='请给我介绍五个上海的景点', info='请输入第一个评估的问题')
+                evaluation_input2 = gr.Textbox(label='测试问题2',value='Please tell me five scenic spots in Shanghai', info='请输入第二个评估问题')
         with gr.Tab('进阶参数'):
             with gr.Row():
                 optim_type = gr.Dropdown(choices=['AdamW'], label='优化器', info='请选择合适的优化器（默认为AdamW）')
-                weight_decay = gr.Number(label='权重衰减', info = '权重衰减是一种正则化方法，用于防止过拟合，通过在损失函数中添加与权重大小成比例的项')
+                weight_decay = gr.Number(label='权重衰减', value=0, info = '权重衰减是一种正则化方法，用于防止过拟合，通过在损失函数中添加与权重大小成比例的项')
             with gr.Row(): 
-                max_norm = gr.Number(label='梯度剪裁', info = '梯度裁剪通过限制梯度的最大长度来防止训练过程中的梯度爆炸问题。' )
-                dataloader_num_workers = gr.Number(label='加载数据时使用的线程数量', info='更多的线程可以加快数据加载速度，但也会增加内存和处理器的使用。' ) 
+                max_norm = gr.Number(label='梯度剪裁', value=1, info = '梯度裁剪通过限制梯度的最大长度来防止训练过程中的梯度爆炸问题。' )
+                dataloader_num_workers = gr.Number(label='加载数据时使用的线程数量', value=0, info='更多的线程可以加快数据加载速度，但也会增加内存和处理器的使用。' ) 
             with gr.Accordion(label="AdamW优化器betas", open=False):
-                beta1 = gr.Number(label='beta1', info='这个值通常用于计算梯度的一阶矩估计（即梯度的指数移动平均）。较高的 beta1 值意味着过去梯度的权重更大，从而使得优化器更加关注历史梯度信息。')
-                beta2 = gr.Number(label='beta2', info= ' 这个值用于计算梯度的二阶矩估计（即梯度的平方的指数移动平均）。较高的 beta2 值使优化器能够在更长的时间跨度内平滑方差的影响。')
+                beta1 = gr.Number(label='beta1', value=0.9, info='这个值通常用于计算梯度的一阶矩估计（即梯度的指数移动平均）。较高的 beta1 值意味着过去梯度的权重更大，从而使得优化器更加关注历史梯度信息。')
+                beta2 = gr.Number(label='beta2', value=0.999, info= ' 这个值用于计算梯度的二阶矩估计（即梯度的平方的指数移动平均）。较高的 beta2 值使优化器能够在更长的时间跨度内平滑方差的影响。')
             with gr.Accordion(label="提示词模版修改",open=False):
                 with gr.Row():
+                    # todo map function 
                     prompt_template = gr.Dropdown(['internlm-chat'], label='提示词模版', info='请选择合适的提示词模版')
                     prompt_template_show = gr.TextArea(label='提示词模版展示')
         change_config_button = gr.Button('点击生成配置文件')

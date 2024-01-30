@@ -106,7 +106,7 @@ class xtunerDataDownload():
         print('>>>>>>> Start hf_download')
         # 1- mid download local dir
         self.mid_download_dir = self.final_out_path   
-        # 2- download 
+        # 2- download  load_dataset  环境变量调整
         os.system(f"""
         export HF_ENDPOINT=https://hf-mirror.com && \
         huggingface-cli download --resume-download {self.data_name} --local-dir-use-symlinks False \
