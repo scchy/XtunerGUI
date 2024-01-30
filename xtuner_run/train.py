@@ -101,7 +101,7 @@ def mm_run(
         # runner.test()
     except Exception as e:
         print(f"mm_run ERROR: \n{e}")
-        return e
+        return f"mm_run ERROR: \n{e}"
     return pp.work_dir
 
 
@@ -168,6 +168,7 @@ class quickTrain:
         self._break_flag = False
         self._t_handle_tr = None
         self.log_file = None
+        self.mm_run_res_ = None
     
     def get_log_path(self):
         list_ =  sorted([i for i in os.listdir(self.work_dir) if '.' not in i])
@@ -202,20 +203,26 @@ class quickTrain:
             f'self.model_name_or_path={self.model_name_or_path}\nself.dataset_name_or_path={self.dataset_name_or_path}\nself.work_dir={self.dataset_name_or_path}\nself.xtuner_type={self.xtuner_type}'
         )
         if self.run_type == 'mmengine':
-            return mm_run(self.model_name_or_path, self.dataset_name_or_path, self.work_dir, self.xtuner_type)
+            self.mm_run_res_ = None
+            self.mm_run_res_ =  mm_run(self.model_name_or_path, self.dataset_name_or_path, self.work_dir, self.xtuner_type)
+            return self.mm_run_res_ 
         return hf_run(self.model_name_or_path, self.dataset_name_or_path, self.work_dir, self.xtuner_type)
     
     def read_log(self):  
+        if self.log_file is None:
+            return f'{self.log_file} NOT EXISTS'
         if not os.path.exists(self.log_file):
             return f'{self.log_file} NOT EXISTS'
         time.sleep(1)
         with open(self.log_file , 'r') as f:
             read_res = f.readlines()
         read_res = ''.join(read_res) # [-20:]
+        if self.mm_run_res_ is not None:
+            return f'{read_res}\n{self.mm_run_res_}'
         return read_res
     
     def start_log(self):
-        time.sleep(10)
+        time.sleep(20)
         return "Start Training"
 
     def quick_train(self, progress=gr.Progress(track_tqdm=True)):
