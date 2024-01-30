@@ -86,14 +86,19 @@ def mm_run(
     dataset_name_or_path,
     work_dir,
     xtuner_type='qlora',
+    resume_from_checkpoint=None,
     progress=gr.Progress(track_tqdm=True)
 ):
     cfg_org = prepareConfig(
         model_name_or_path=model_name_or_path,
         dataset_name_or_path=dataset_name_or_path
     )
+    if resume_from_checkpoint is not None:
+        cfg_org.resume_from_checkpoint = resume_from_checkpoint
     pp = prepareUtil(cfg_org, work_dir=work_dir, lora_type=xtuner_type)
     cfg = pp.auto_prepare()
+    if resume_from_checkpoint is not None:
+        cfg['load_from'] = resume_from_checkpoint
     try:
         runner = Runner.from_cfg(cfg)
         # runner = Runner.from_cfg(org_cfg)
@@ -110,6 +115,7 @@ def hf_run(
     dataset_name_or_path,
     work_dir,
     xtuner_type='qlora',
+    resume_from_checkpoint=None,
     progress=gr.Progress(track_tqdm=True)
 ):
     cfg = prepareConfig(
@@ -121,6 +127,8 @@ def hf_run(
         os.environ['LOCAL_RANK'] = str(cfg.local_rank)
 
     cfg_dict = cfg.to_tr_dict()
+    if resume_from_checkpoint is not None:
+        cfg_dict['resume_from_checkpoint'] = resume_from_checkpoint
     tr_args = TrainingArguments(**cfg_dict)
     print('=='*35)
     print('tr_args=', tr_args)
@@ -159,10 +167,12 @@ class quickTrain:
                  dataset_name_or_path, 
                  work_dir,
                  xtuner_type='qlora', 
+                 resume_from_checkpoint=None,
                  run_type='mmengine'):
         self.model_name_or_path = model_name_or_path
         self.dataset_name_or_path = dataset_name_or_path
         self.xtuner_type = xtuner_type
+        self.resume_from_checkpoint = resume_from_checkpoint
         self.run_type = run_type
         self.work_dir = work_dir
         self._break_flag = False
@@ -174,7 +184,6 @@ class quickTrain:
         list_ =  sorted([i for i in os.listdir(self.work_dir) if '.' not in i])
         dir_name = list_[-2] if  'last_' in list_[-1] else list_[-1]
         self.log_file = os.path.join(self.work_dir, dir_name, f'{dir_name}.log')
-        self.bf_mt = os.stat(self.log_file).st_mtime
         
     def set_model_path(self, model_path):
         print(f'set_model_path({model_path})')
@@ -193,6 +202,9 @@ class quickTrain:
         self.work_dir = f'{work_dir}/work_dir'
         if not os.path.exists(self.work_dir):
             os.system(f'mkdir -p {self.work_dir}')
+        
+    def set_resume_from_checkpoint(self, work_dir):
+        self.resume_from_checkpoint = work_dir
 
     def _t_start(self):
         self._t_handle_tr = threading.Thread(target=self._quick_train, name=f'X-train-{self.run_type}', daemon=True)
@@ -204,16 +216,16 @@ class quickTrain:
         )
         if self.run_type == 'mmengine':
             self.mm_run_res_ = None
-            self.mm_run_res_ =  mm_run(self.model_name_or_path, self.dataset_name_or_path, self.work_dir, self.xtuner_type)
+            self.mm_run_res_ =  mm_run(self.model_name_or_path, self.dataset_name_or_path, self.work_dir, self.xtuner_type, self.resume_from_checkpoint)
             return self.mm_run_res_ 
-        return hf_run(self.model_name_or_path, self.dataset_name_or_path, self.work_dir, self.xtuner_type)
+        return hf_run(self.model_name_or_path, self.dataset_name_or_path, self.work_dir, self.xtuner_type, self.resume_from_checkpoint)
     
     def read_log(self):  
         if self.log_file is None:
             return f'{self.log_file} NOT EXISTS'
         if not os.path.exists(self.log_file):
             return f'{self.log_file} NOT EXISTS'
-        time.sleep(1)
+        time.sleep(3)
         with open(self.log_file , 'r') as f:
             read_res = f.readlines()
         read_res = ''.join(read_res) # [-20:]
@@ -222,14 +234,14 @@ class quickTrain:
         return read_res
     
     def start_log(self):
-        time.sleep(20)
+        time.sleep(10)
         return "Start Training"
 
     def quick_train(self, progress=gr.Progress(track_tqdm=True)):
         self.log_file = None
         self._break_flag = False
         self._t_start()
-        time.sleep(20)
+        time.sleep(5)
         self.get_log_path()
         self._t_handle_tr.join()
         if self._break_flag:

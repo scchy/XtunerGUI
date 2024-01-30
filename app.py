@@ -207,9 +207,14 @@ with gr.Blocks() as demo:
         with gr.Accordion(label='模型续训', open=False):
             retry_path = gr.Textbox(label='原配置文件地址', info='请查询原配置文件地址并进行填入')
             retry_button = gr.Button('继续训练')
+            
+            retry_button.click(TR_CLS.set_resume_from_checkpoint, inputs=[retry_path])
+            retry_button.click(TR_CLS.quick_train, outputs=[work_path])
+
         with gr.Accordion(label="终端界面",open=False):
             log_file = gr.TextArea(label='日志文件打印', info= '点击可查看模型训练信息')        
             train_model.click(TR_CLS.start_log, outputs=[log_file])
+            retry_button.click(TR_CLS.start_log, outputs=[log_file])
             log_file.change(TR_CLS.read_log, outputs=[log_file])
     
         wrong_message5 = gr.Markdown()
