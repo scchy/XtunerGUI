@@ -185,7 +185,7 @@ with gr.Blocks() as demo:
                     prompt_template = gr.Dropdown(PROMPT_TEMPLATE_LIST, label='提示词模版', value='internlm_chat', info='请选择合适的提示词模版')
                     prompt_template_show = gr.TextArea(label='提示词模版展示')
         change_config_button = gr.Button('点击生成配置文件')
-        cfg_py = gr.Textbox(visible=False)
+        cfg_py_box = gr.Textbox(label='config python文件', info= 'config python文件', value="还未生成")
         change_config_button.click(
             build_and_save_config, 
             inputs=[
@@ -193,7 +193,7 @@ with gr.Blocks() as demo:
                 local_path,
                 ft_method,
                 model_path,
-                data_path,
+                dataset, # data_path,
                 deepspeed,
                 lr,
                 warmup_ratio,
@@ -217,17 +217,17 @@ with gr.Blocks() as demo:
                 beta2,
                 prompt_template,
             ],
-            outputs=[cfg_py]
+            outputs=[cfg_py_box]
         )
         wrong_message4 = gr.Markdown()
 
         gr.Markdown("## 4. 微调模型训练")
         TR_CLS = quickTrain(
-            config_py_path=cfg_py,
+            config_py_path=cfg_py_box.value,
             work_dir=f'{local_path.value}/work_dir',
             deepspeed_seed=deepspeed
         )
-        cfg_py.change(TR_CLS.reset_cfg_py, inputs=[cfg_py])
+        cfg_py_box.change(TR_CLS.reset_cfg_py, inputs=[cfg_py_box])
         deepspeed.change(TR_CLS.reset_deepspeed, inputs=[deepspeed])
         local_path.change(TR_CLS.reset_work_dir, inputs=[local_path])
         with gr.Row():

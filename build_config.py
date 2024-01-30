@@ -3,6 +3,7 @@ from mmengine.config.lazy import LazyObject
 from xtuner.utils import PROMPT_TEMPLATE, SYSTEM_TEMPLATE
 import torch
 import os
+CUR_DIR = os.path.dirname(__file__)
 
 DATA2MAPFN = {
     'tatsu-lab/alpaca': 'alpaca_map_fn',
@@ -128,11 +129,11 @@ def build_config(
         optim_type, weight_decay, max_norm, dataloader_num_workers, beta1, beta2, 
         prompt_template):
     if ft_method == 'full':
-        cfg = Config.fromfile('./template_configs/full_finetune.py')
+        cfg = Config.fromfile(f'{CUR_DIR}/template_configs/full_finetune.py')
     elif ft_method == 'lora':
-        cfg = Config.fromfile('./template_configs/lora.py')
+        cfg = Config.fromfile(f'{CUR_DIR}/template_configs/lora.py')
     elif ft_method == 'qlora':
-        cfg = Config.fromfile('./template_configs/qlora.py')
+        cfg = Config.fromfile(f'{CUR_DIR}/template_configs/qlora.py')
     else:
         raise NotImplementedError(f'Expect ft_method to be one of (full, lora, qlora), but got {ft_method}.')
 
@@ -207,11 +208,15 @@ def build_and_save_config(dataset_personal_path, root_dir, *args, **kwargs):
     kwargs.update(
         dict(zip(default_args_key, list(args)))
     )
-    kwargs['is_custom_dataset'] = dataset_personal_path is not None
+    kwargs['is_custom_dataset'] = False
+    if dataset_personal_path is not None:
+        kwargs['is_custom_dataset'] = True 
+        kwargs['dataset'] = dataset_personal_path
     print(kwargs)
     cfg = build_config(**kwargs)
     cfg_py = os.path.join(root_dir, 'work_dir/xtuner_config.py')
     cfg.dump(cfg_py)
+    print('cfg_py=', cfg_py)
     return cfg_py
 
 

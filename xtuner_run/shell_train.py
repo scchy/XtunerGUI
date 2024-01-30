@@ -29,12 +29,15 @@ class quickTrain:
         print(f'config_py_path={config_py_path}')
     
     def reset_deepspeed(self, deepspeed):
+        print(f"reset_deepspeed({deepspeed})")
         self.deepspeed_seed = deepspeed
     
     def reset_work_dir(self, local_path):
+        print(f"reset_work_dir({local_path})")
         self.work_dir = os.path.join(local_path, 'work_dir')
 
     def reset_cfg_py(self, cfg_py):
+        print(f"reset_cfg_py({cfg_py})")
         self.config_py_path = cfg_py
 
     def remove_log_file(self):
@@ -43,11 +46,15 @@ class quickTrain:
     
     def _quick_train(self, progress=gr.Progress(track_tqdm=True)):
         self.remove_log_file()
-        add_ = ''
+        add_ = resume_ = ''
         if str(self.deepspeed_seed).lower() != 'none':
             add_ = f'--deepspeed deepspeed_{self.deepspeed_seed} '
         
-        exec_ = f'xtuner train {self.config_py_path} --work_dir {self.work_dir} {add_} > {self.log_file}'
+        if self.resume_from_checkpoint is not None:
+            resume_ = f'--resume {self.resume_from_checkpoint}'
+        
+        exec_ = f'xtuner train {self.config_py_path} --work-dir {self.work_dir} {add_} {resume_} > {self.log_file}'
+        print(f'exec={exec_}')
         os.system(exec_)
     
     def _t_start(self):
