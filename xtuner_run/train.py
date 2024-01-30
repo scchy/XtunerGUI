@@ -203,7 +203,7 @@ class quickTrain:
         if not os.path.exists(self.work_dir):
             os.system(f'mkdir -p {self.work_dir}')
         
-    def set_resume_from_checkpoint(self, work_dir):
+    def set_resume_from_checkpoint(self, work_dir=None):
         self.resume_from_checkpoint = work_dir
 
     def _t_start(self):

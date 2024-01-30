@@ -6,7 +6,6 @@ DATA_LIST = [
     'Skywork/SkyPile-150B',
     'WizardLM/WizardLM_evol_instruct_V2_196k',
     'b-mc2/sql-create-context',
-    'bigcode/starcoder',
     'burkelibbey/colors',
     'damo/MSAgent-Bench',
     'garage-bAInd/Open-Platypus',

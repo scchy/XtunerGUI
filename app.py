@@ -155,13 +155,14 @@ with gr.Blocks() as demo:
                 lr = gr.Number(label='学习率(lr)', info= '请选择合适的学习率')
                 warmup_ratio = gr.Number(label='预热比', info='预热比例用于在训练初期逐渐增加学习率，以避免训练初期的不稳定性。')
                 batch_size_per_device = gr.Number(label='设备的样本个数(batch_size_per_device)', info='请选择每个设备的样本个数') 
-                accumlative_counts = gr.Number(label='梯度累计数', info='请选择合适的梯度累计数') 
+                accumulative_counts = gr.Number(label='梯度累计数', info='请选择合适的梯度累计数') 
+                save_total_limit = gr.Number(label='最多保存ckpt个数', info='控制保存ckpt的个数') 
             with gr.Row():
                 num_GPU = gr.Number(label='GPU的数量',info='请设置训练是所用GPU的数量')
                 max_length = gr.Number(label='数据集最大长度(max_length)', info='请设置训练数据最大长度')
                 pack_to_max_length = gr.Dropdown(choices=[True, False], label='选择合并为最长样本(pack_to_max_length)',info='请选择是否将多条样本打包为一条最长长度的样本')
                 max_epochs = gr.Number(label='训练迭代数(max_epochs)', info='请选择合适的训练迭代数')
-                save_checkpoint_ratio = gr.Number(label='保存权重的间隔', info='请输入保存checkpoint的间隔')
+                save_checkpoint_interval = gr.Number(label='保存权重的间隔', info='请输入保存checkpoint的间隔')
             with gr.Accordion(label="测试问题模版", open=False):
                 evaluation_freq = gr.Number(label='验证对话效果频率(evaluation_freq)', info='请确定模型每多少轮需要验证一次对话效果')
                 evaluation_system_prompt = gr.Textbox(label = '系统提示词', info='请设置在评估模式下的System Prompt')
@@ -200,6 +201,7 @@ with gr.Blocks() as demo:
             stop_button = gr.Button('训练中断',size='lg')
 
             work_path = gr.Textbox(label='work dir')
+            train_model.click(TR_CLS.set_resume_from_checkpoint)
             train_model.click(TR_CLS.quick_train, outputs=[work_path])
             stop_button.click(TR_CLS.break_train, outputs=[work_path])
             # stop_button.click(empty_break_fn, outputs=[work_path])
