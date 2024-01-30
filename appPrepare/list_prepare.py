@@ -41,3 +41,27 @@ MODEL_LIST = [
     'Qwen/Qwen-7B-Chat', 
     'Qwen/Qwen-7B', 
 ]
+
+
+PROMPT_TEMPLATE_LIST = [
+    'default',
+    'zephyr',
+    'internlm_chat',
+    'internlm2_chat',
+    'moss_sft',
+    'llama2_chat',
+    'code_llama_chat',
+    'chatglm2',
+    'chatglm3',
+    'qwen_chat',
+    'baichuan_chat',
+    'baichuan2_chat',
+    'wizardlm',
+    'wizardcoder',
+    'vicuna',
+    'deepseek_coder',
+    'deepseekcoder',
+    'deepseek_moe',
+    'mistral',
+    'mixtral'
+]

@@ -6,7 +6,8 @@ from xtuner_download.download_model import xtunerModelDownload
 from xtuner_download.download_dataset import xtunerDataDownload
 from xtuner_run.shell_train import quickTrain
 from appPrepare.files_prepare import DATA_DOWNLOAD_DIR, MODEL_DOWNLOAD_DIR, CUR_PATH, WORK_DIR
-from appPrepare.list_prepare import DATA_LIST, MODEL_LIST
+from appPrepare.list_prepare import DATA_LIST, MODEL_LIST, PROMPT_TEMPLATE_LIST
+from build_config import build_and_save_config
 from tqdm import tqdm
 import gradio as gr
 
@@ -87,7 +88,7 @@ with gr.Blocks() as demo:
         gr.Markdown("## 2. 微调方法、模型、数据集设置")
         
         with gr.Row():
-            ft_method = gr.Dropdown(choices=['qlora', 'lora', '自定义'], value='qlora',label = '微调方法', info='''请选择微调的方法''',interactive=True)
+            ft_method = gr.Dropdown(choices=['qlora', 'lora', 'full'], value='qlora',label = '微调方法', info='''请选择微调的方法''',interactive=True)
             with gr.Column():
                 model = gr.Dropdown(choices=MODEL_LIST + ['自定义'], value='internlm/internlm-chat-7b',label = '模型', info='请选择配置文件对应的模型',interactive=True)
                 DM_CLS = xtunerModelDownload(
@@ -99,7 +100,7 @@ with gr.Blocks() as demo:
                 with gr.Row():
                     model_download_button = gr.Button('模型下载')
                     model_stop_download = gr.Button('取消下载')
-                    model_path = gr.Textbox(label='下载详情')
+                    model_path = gr.Textbox(label='模型下载详情')
 
                 # model_download_information = gr.Markdown(label='模型下载信息')
                 # model_download_path = gr.Textbox(visible=False)
@@ -117,7 +118,7 @@ with gr.Blocks() as demo:
                 with gr.Row():
                     dataset_download_button = gr.Button('数据集下载')
                     dataset_stop_download = gr.Button('取消下载')
-                    data_path = gr.Textbox(label='下载详情')
+                    data_path = gr.Textbox(label='数据下载详情')
 
                 # dataset_download_information = gr.Markdown(label='数据集下载信息')
                 # dataset_download_path = gr.Textbox(visible=False)
@@ -151,18 +152,18 @@ with gr.Blocks() as demo:
             gr.Markdown('#### 参数调整方式为...')
         with gr.Tab("基础参数"):
             with gr.Row():
-                deepspeed = gr.Dropdown(choices=['None','zero1','zero2','zero3'], label='deepspeed算子', value=None, info='请选择deepspeed算子类型或关闭deepspeed')
+                deepspeed = gr.Dropdown(choices=['None','zero1','zero2','zero3'], label='deepspeed算子', value='None', info='请选择deepspeed算子类型或关闭deepspeed')
                 lr = gr.Number(label='学习率(lr)', value=2.0e-5, info= '请选择合适的学习率')
                 warmup_ratio = gr.Number(label='预热比', value=0.03, info='预热比例用于在训练初期逐渐增加学习率，以避免训练初期的不稳定性。')
                 batch_size_per_device = gr.Number(label='设备的样本个数(batch_size_per_device)', value=1, info='请选择每个设备的样本个数') 
                 accumulative_counts = gr.Number(label='梯度累计数', value=16, info='请选择合适的梯度累计数') 
                 save_total_limit = gr.Number(label='最多保存ckpt个数', value=2, info='控制保存ckpt的个数') 
             with gr.Row():
-                num_GPU = gr.Number(label='GPU的数量',info='请设置训练是所用GPU的数量')
-                max_length = gr.Number(label='数据集最大长度(max_length)', info='请设置训练数据最大长度')
-                pack_to_max_length = gr.Dropdown(choices=[True, False], label='选择合并为最长样本(pack_to_max_length)',info='请选择是否将多条样本打包为一条最长长度的样本')
-                max_epochs = gr.Number(label='训练迭代数(max_epochs)', info='请选择合适的训练迭代数')
-                save_checkpoint_interval = gr.Number(label='保存权重的间隔', info='请输入保存checkpoint的间隔')
+                num_GPU = gr.Number(label='GPU的数量', value=1, info='请设置训练是所用GPU的数量')
+                max_length = gr.Number(label='数据集最大长度(max_length)', value=2048, info='请设置训练数据最大长度')
+                pack_to_max_length = gr.Dropdown(choices=[True, False], value=True, label='选择合并为最长样本(pack_to_max_length)',info='请选择是否将多条样本打包为一条最长长度的样本')
+                max_epochs = gr.Number(label='训练迭代数(max_epochs)', value=2, info='请选择合适的训练迭代数')
+                save_checkpoint_interval = gr.Number(label='保存权重的间隔', value=1000, info='请输入保存checkpoint的间隔')
             with gr.Accordion(label="测试问题模版", open=False):
                 evaluation_freq = gr.Number(label='验证对话效果频率(evaluation_freq)', value=100, info='请确定模型每多少轮需要验证一次对话效果')
                 evaluation_system_prompt = gr.Textbox(label = '系统提示词', value='', info='请设置在评估模式下的System Prompt')
@@ -170,7 +171,7 @@ with gr.Blocks() as demo:
                 evaluation_input2 = gr.Textbox(label='测试问题2',value='Please tell me five scenic spots in Shanghai', info='请输入第二个评估问题')
         with gr.Tab('进阶参数'):
             with gr.Row():
-                optim_type = gr.Dropdown(choices=['AdamW'], label='优化器', info='请选择合适的优化器（默认为AdamW）')
+                optim_type = gr.Dropdown(choices=['AdamW'], value='AdamW', label='优化器', info='请选择合适的优化器（默认为AdamW）')
                 weight_decay = gr.Number(label='权重衰减', value=0, info = '权重衰减是一种正则化方法，用于防止过拟合，通过在损失函数中添加与权重大小成比例的项')
             with gr.Row(): 
                 max_norm = gr.Number(label='梯度剪裁', value=1, info = '梯度裁剪通过限制梯度的最大长度来防止训练过程中的梯度爆炸问题。' )
@@ -181,17 +182,54 @@ with gr.Blocks() as demo:
             with gr.Accordion(label="提示词模版修改",open=False):
                 with gr.Row():
                     # todo map function 
-                    prompt_template = gr.Dropdown(['internlm-chat'], label='提示词模版', info='请选择合适的提示词模版')
+                    prompt_template = gr.Dropdown(PROMPT_TEMPLATE_LIST, label='提示词模版', value='internlm_chat', info='请选择合适的提示词模版')
                     prompt_template_show = gr.TextArea(label='提示词模版展示')
         change_config_button = gr.Button('点击生成配置文件')
+        cfg_py = gr.Textbox(visible=False)
+        change_config_button.click(
+            build_and_save_config, 
+            inputs=[
+                dataset_personal_path,
+                local_path,
+                ft_method,
+                model_path,
+                data_path,
+                deepspeed,
+                lr,
+                warmup_ratio,
+                batch_size_per_device,
+                accumulative_counts,
+                num_GPU,
+                max_length,
+                pack_to_max_length,
+                max_epochs,
+                save_checkpoint_interval,
+                save_total_limit,
+                evaluation_freq,
+                evaluation_system_prompt,
+                evaluation_input1,
+                evaluation_input2,
+                optim_type,
+                weight_decay,
+                max_norm,
+                dataloader_num_workers,
+                beta1,
+                beta2,
+                prompt_template,
+            ],
+            outputs=[cfg_py]
+        )
         wrong_message4 = gr.Markdown()
 
         gr.Markdown("## 4. 微调模型训练")
         TR_CLS = quickTrain(
-            config_py_path='/root/ft-medqa/internlm_chat_7b_qlora_medqa2019_e3.py', # 当前写死
+            config_py_path=cfg_py,
             work_dir=f'{local_path.value}/work_dir',
-            xtuner_type=ft_method.value
+            deepspeed_seed=deepspeed
         )
+        cfg_py.change(TR_CLS.reset_cfg_py, inputs=[cfg_py])
+        deepspeed.change(TR_CLS.reset_deepspeed, inputs=[deepspeed])
+        local_path.change(TR_CLS.reset_work_dir, inputs=[local_path])
         with gr.Row():
             train_model = gr.Button('Xtuner！启动！',size='lg')
             stop_button = gr.Button('训练中断',size='lg')

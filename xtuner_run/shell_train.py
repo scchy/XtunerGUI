@@ -15,19 +15,27 @@ class quickTrain:
     def __init__(self, 
                  work_dir,
                  config_py_path,
-                 xtuner_type='qlora', 
-                 resume_from_checkpoint=None,
                  deepspeed_seed=None,
+                 resume_from_checkpoint=None,
                  run_type='mmengine'):
         self.work_dir = work_dir
         self.config_py_path = config_py_path
-        self.xtuner_type = xtuner_type
         self.resume_from_checkpoint = resume_from_checkpoint
         self.run_type = run_type
         self.deepspeed_seed = deepspeed_seed
         self._t_handle_tr = None
         self.log_file = os.path.join(CUR_DIR, '__xtuner_tr.log')
         self.remove_log_file()
+        print(f'config_py_path={config_py_path}')
+    
+    def reset_deepspeed(self, deepspeed):
+        self.deepspeed_seed = deepspeed
+    
+    def reset_work_dir(self, local_path):
+        self.work_dir = os.path.join(local_path, 'work_dir')
+
+    def reset_cfg_py(self, cfg_py):
+        self.config_py_path = cfg_py
 
     def remove_log_file(self):
         if os.path.exists(self.log_file):
@@ -39,7 +47,7 @@ class quickTrain:
         if str(self.deepspeed_seed).lower() != 'none':
             add_ = f'--deepspeed deepspeed_{self.deepspeed_seed} '
         
-        exec_ = f'xtuner train {self.config_py_path} {add_} > {self.log_file}'
+        exec_ = f'xtuner train {self.config_py_path} --work_dir {self.work_dir} {add_} > {self.log_file}'
         os.system(exec_)
     
     def _t_start(self):

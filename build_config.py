@@ -2,6 +2,7 @@ from mmengine import Config, ConfigDict
 from mmengine.config.lazy import LazyObject
 from xtuner.utils import PROMPT_TEMPLATE, SYSTEM_TEMPLATE
 import torch
+import os
 
 DATA2MAPFN = {
     'tatsu-lab/alpaca': 'alpaca_map_fn',
@@ -174,11 +175,45 @@ kwargs = dict(
     prompt_template='internlm2_chat'
     )
 
+default_args_key = [
+    'ft_method',
+    'model_path',
+    'dataset',
+    'deepspeed',
+    'lr',
+    'warmup_ratio',
+    'batch_size_per_device',
+    'accumulative_counts',
+    'num_GPU',
+    'max_length',
+    'pack_to_max_length',
+    'max_epochs',
+    'save_checkpoint_interval',
+    'save_total_limit',
+    'evaluation_freq',
+    'evaluation_system_prompt',
+    'evaluation_input1',
+    'evaluation_input2',
+    'optim_type',
+    'weight_decay',
+    'max_norm',
+    'dataloader_num_workers',
+    'beta1',
+    'beta2',
+    'prompt_template',
+]
 
-def build_and_save_config(config_file_path, **kwargs):
+def build_and_save_config(dataset_personal_path, root_dir, *args, **kwargs):
+    kwargs.update(
+        dict(zip(default_args_key, list(args)))
+    )
+    kwargs['is_custom_dataset'] = dataset_personal_path is not None
+    print(kwargs)
     cfg = build_config(**kwargs)
-    cfg.dump(config_file_path)
+    cfg_py = os.path.join(root_dir, 'work_dir/xtuner_config.py')
+    cfg.dump(cfg_py)
+    return cfg_py
 
 
 if __name__ == '__main__':
-    build_and_save_config('./config.py', **kwargs)
+    build_and_save_config('.', **kwargs)
