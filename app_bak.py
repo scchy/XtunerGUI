@@ -4,7 +4,7 @@
 
 from xtuner_download.download_model import xtunerModelDownload
 from xtuner_download.download_dataset import xtunerDataDownload
-from xtuner_run.shell_train import quickTrain
+from xtuner_run.train import quickTrain
 from appPrepare.files_prepare import DATA_DOWNLOAD_DIR, MODEL_DOWNLOAD_DIR, CUR_PATH, WORK_DIR
 from appPrepare.list_prepare import DATA_LIST, MODEL_LIST
 from tqdm import tqdm
@@ -187,15 +187,21 @@ with gr.Blocks() as demo:
 
         gr.Markdown("## 4. 微调模型训练")
         TR_CLS = quickTrain(
-            config_py_path='/root/ft-medqa/internlm_chat_7b_qlora_medqa2019_e3.py', # 当前写死
+            model_name_or_path=model_path.value,
+            dataset_name_or_path=data_path.value,
             work_dir=f'{local_path.value}/work_dir',
             xtuner_type=ft_method.value
         )
+        model_path.change(TR_CLS.set_model_path, inputs=[model_path])
+        data_path.change(TR_CLS.set_data_path, inputs=[data_path])
+        ft_method.change(TR_CLS.set_xtuner_type, inputs=[ft_method])
+        local_path_button.click(TR_CLS.set_work_dir, inputs=[local_path])
         with gr.Row():
             train_model = gr.Button('Xtuner！启动！',size='lg')
             stop_button = gr.Button('训练中断',size='lg')
 
             work_path = gr.Textbox(label='work dir')
+            train_model.click(TR_CLS.set_resume_from_checkpoint)
             train_model.click(TR_CLS.quick_train, outputs=[work_path])
             stop_button.click(TR_CLS.break_train, outputs=[work_path])
             # stop_button.click(empty_break_fn, outputs=[work_path])
@@ -203,13 +209,14 @@ with gr.Blocks() as demo:
         with gr.Accordion(label='模型续训', open=False):
             retry_path = gr.Textbox(label='原配置文件地址', info='请查询原配置文件地址并进行填入')
             retry_button = gr.Button('继续训练')
-
+            
+            retry_button.click(TR_CLS.set_resume_from_checkpoint, inputs=[retry_path])
             retry_button.click(TR_CLS.quick_train, outputs=[work_path])
 
         with gr.Accordion(label="终端界面",open=False):
             log_file = gr.TextArea(label='日志文件打印', info= '点击可查看模型训练信息')        
-            # train_model.click(TR_CLS.start_log, outputs=[log_file])
-            # retry_button.click(TR_CLS.start_log, outputs=[log_file])
+            train_model.click(TR_CLS.start_log, outputs=[log_file])
+            retry_button.click(TR_CLS.start_log, outputs=[log_file])
     
         wrong_message5 = gr.Markdown()
         gr.Markdown("## 5. 微调结果展示")
@@ -268,7 +275,7 @@ with gr.Blocks() as demo:
 
     #with gr.Tab('微调模型测评（OpenCompass）'):
 
-    demo.load(TR_CLS.read_log, outputs=[log_file], every=1)
+    demo.load(TR_CLS.read_log, outputs=[log_file], every=3)
     demo.launch(share=True) #, enable_queue=True)
 
 

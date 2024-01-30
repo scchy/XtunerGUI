@@ -99,6 +99,7 @@ def mm_run(
     cfg = pp.auto_prepare()
     if resume_from_checkpoint is not None:
         cfg['load_from'] = resume_from_checkpoint
+        cfg['resume'] = True
     try:
         runner = Runner.from_cfg(cfg)
         # runner = Runner.from_cfg(org_cfg)
@@ -222,10 +223,9 @@ class quickTrain:
     
     def read_log(self):  
         if self.log_file is None:
-            return f'{self.log_file} NOT EXISTS'
+            return ""
         if not os.path.exists(self.log_file):
-            return f'{self.log_file} NOT EXISTS'
-        time.sleep(3)
+            return ""
         with open(self.log_file , 'r') as f:
             read_res = f.readlines()
         read_res = ''.join(read_res) # [-20:]
