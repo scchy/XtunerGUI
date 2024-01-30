@@ -34,7 +34,7 @@ def get_final_out_files(folder_path):
     for root, dirs, files in os.walk(folder_path):
         for file in files:
             file_tt = p_join(root, file)
-            if os.path.isfile(file_tt) and 'cache' not in file_tt:
+            if not os.path.isdir(file_tt) and 'cache' not in file_tt:
                 all_files.append(file_tt)
     return all_files
 

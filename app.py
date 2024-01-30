@@ -10,7 +10,6 @@ from appPrepare.list_prepare import DATA_LIST, MODEL_LIST
 from tqdm import tqdm
 import gradio as gr
 
-progress = gr.Progress(track_tqdm=True)
 
 def combine_message_and_history(message, chat_history):
     # 将聊天历史中的每个元素（假设是元组）转换为字符串
@@ -192,8 +191,8 @@ with gr.Blocks() as demo:
             work_dir=f'{local_path.value}/work_dir',
             xtuner_type=ft_method.value
         )
-        model.change(TR_CLS.set_model_path, inputs=[model])
-        dataset.change(TR_CLS.set_data_path, inputs=[dataset])
+        model_path.change(TR_CLS.set_model_path, inputs=[model_path])
+        data_path.change(TR_CLS.set_data_path, inputs=[data_path])
         ft_method.change(TR_CLS.set_xtuner_type, inputs=[ft_method])
         local_path_button.click(TR_CLS.set_work_dir, inputs=[local_path])
         with gr.Row():
@@ -203,16 +202,16 @@ with gr.Blocks() as demo:
             work_path = gr.Textbox(label='work dir')
             train_model.click(TR_CLS.quick_train, outputs=[work_path])
             stop_button.click(TR_CLS.break_train, outputs=[work_path])
-        with gr.Row():
-            log_txt = gr.Textbox(lines=10)
-            train_model.click(TR_CLS.start_log, outputs=[log_txt])
-            log_txt.change(TR_CLS.read_log, outputs=[log_txt])
-    
+            # stop_button.click(empty_break_fn, outputs=[work_path])
+
         with gr.Accordion(label='模型续训', open=False):
             retry_path = gr.Textbox(label='原配置文件地址', info='请查询原配置文件地址并进行填入')
             retry_button = gr.Button('继续训练')
         with gr.Accordion(label="终端界面",open=False):
             log_file = gr.TextArea(label='日志文件打印', info= '点击可查看模型训练信息')        
+            train_model.click(TR_CLS.start_log, outputs=[log_file])
+            log_file.change(TR_CLS.read_log, outputs=[log_file])
+    
         wrong_message5 = gr.Markdown()
         gr.Markdown("## 5. 微调结果展示")
         with gr.Tab('训练结果'):
@@ -271,8 +270,8 @@ with gr.Blocks() as demo:
     #with gr.Tab('微调模型测评（OpenCompass）'):
 
 
-    demo.launch(share=True)
+    demo.launch(share=True) #, enable_queue=True)
 
 
 
-        
+

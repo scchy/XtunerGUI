@@ -94,10 +94,14 @@ def mm_run(
     )
     pp = prepareUtil(cfg_org, work_dir=work_dir, lora_type=xtuner_type)
     cfg = pp.auto_prepare()
-    runner = Runner.from_cfg(cfg)
-    # runner = Runner.from_cfg(org_cfg)
-    runner.train()
-    # runner.test()
+    try:
+        runner = Runner.from_cfg(cfg)
+        # runner = Runner.from_cfg(org_cfg)
+        runner.train()
+        # runner.test()
+    except Exception as e:
+        print(f"mm_run ERROR: \n{e}")
+        return e
     return pp.work_dir
 
 
@@ -172,15 +176,19 @@ class quickTrain:
         self.bf_mt = os.stat(self.log_file).st_mtime
         
     def set_model_path(self, model_path):
+        print(f'set_model_path({model_path})')
         self.model_name_or_path = model_path
     
     def set_data_path(self, data_path):
+        print(f'set_data_path({data_path})')
         self.dataset_name_or_path = data_path
     
     def set_xtuner_type(self, xtuner_type):
+        print(f'set_xtuner_type({xtuner_type})')
         self.xtuner_type = xtuner_type
         
     def set_work_dir(self, work_dir):
+        print(f'set_work_dir({work_dir})')
         self.work_dir = f'{work_dir}/work_dir'
         if not os.path.exists(self.work_dir):
             os.system(f'mkdir -p {self.work_dir}')
@@ -190,22 +198,24 @@ class quickTrain:
         self._t_handle_tr.start()
 
     def _quick_train(self, progress=gr.Progress(track_tqdm=True)):
+        print(
+            f'self.model_name_or_path={self.model_name_or_path}\nself.dataset_name_or_path={self.dataset_name_or_path}\nself.work_dir={self.dataset_name_or_path}\nself.xtuner_type={self.xtuner_type}'
+        )
         if self.run_type == 'mmengine':
             return mm_run(self.model_name_or_path, self.dataset_name_or_path, self.work_dir, self.xtuner_type)
         return hf_run(self.model_name_or_path, self.dataset_name_or_path, self.work_dir, self.xtuner_type)
     
     def read_log(self):  
+        if not os.path.exists(self.log_file):
+            return f'{self.log_file} NOT EXISTS'
         time.sleep(1)
-        now_mt = os.stat(self.log_file).st_mtime
         with open(self.log_file , 'r') as f:
-            read_res = f.read_lines()
-        read_res = ''.join(read_res[-20:])
-        if now_mt == self.bf_mt:
-            return read_res
+            read_res = f.readlines()
+        read_res = ''.join(read_res) # [-20:]
         return read_res
     
     def start_log(self):
-        time.sleep(20)
+        time.sleep(10)
         return "Start Training"
 
     def quick_train(self, progress=gr.Progress(track_tqdm=True)):
@@ -217,7 +227,7 @@ class quickTrain:
         self._t_handle_tr.join()
         if self._break_flag:
             return "Done! Xtuner had interrupted!"
-        return self.final_out_path
+        return self.work_dir
 
     def break_train(self):
         # 然后杀死该线程

@@ -127,7 +127,7 @@ class xtunerModelDownload():
         self.__check_create_dir()
         self.mid_download_dir = self.final_out_path
     
-    def auto_download(self, progress=gr.Progress(track_tqdm=True), tp=None):
+    def auto_download(self, progress=gr.Progress(track_tqdm=True), tp='speed'):
         cnt_ = 0
         while not self._get_info_flag:
             cnt_ += 1
@@ -145,23 +145,29 @@ class xtunerModelDownload():
         return self.final_out_path
 
     def loop_download(self, tp='speed'):
-        if 'internlm' in self.model_name.lower():
-            loop_list = [self.openxlab_download, self.modelscope_download, self.hf_download]
-        elif tp == 'speed':
+        # modelscope first
+        # if 'internlm' in self.model_name.lower():
+        #     loop_list = [self.openxlab_download, self.modelscope_download, self.hf_download]
+        if tp == 'speed':
             loop_list = [self.modelscope_download, self.hf_download, self.openxlab_download]
         else:
             loop_list = [self.hf_download, self.modelscope_download, self.openxlab_download]
 
         for download_func in loop_list:
+            print("download_func=", download_func)
+            print("_get_info_flag=", self._get_info_flag)
             try:
                 download_func()
                 time.sleep(1)
             except Exception as e:
+                print("download_func=", download_func, '\n', '--'*25, f'\nerror={e}\n', '--'*25)
                 pass
             # 执行完检验
             if self._finished_check():
                 print('finished download all model files')
                 break
+
+            print('Failed download all model files & remove_and_create')
             self.remove_and_create()
         return
 
@@ -209,9 +215,13 @@ class xtunerModelDownload():
         """
         no_flag = (self.total_file_nums is not None) or (self.total_file_nums <= 0.01)
         if no_flag and os.path.exists(self.final_out_path):
-            file_same = len([i for i in os.listdir(self.final_out_path) if os.path.isfile(i) ]) == self.total_file_nums
-            size_same = sum([p_getsize(p_join(self.final_out_path, i))/ 1024**2
-                         for i in os.listdir(self.final_out_path)])/(self.total_MB + 1e-5) >= 0.9999
+            final_nums = len([i for i in os.listdir(self.final_out_path) if not os.path.isdir(i) ]) 
+            print('os.listdir(self.final_out_path)=', os.listdir(self.final_out_path))
+            final_MB = sum([p_getsize(p_join(self.final_out_path, i))/ 1024**2 for i in os.listdir(self.final_out_path)])
+            file_same = final_nums >= self.total_file_nums
+            size_same = final_MB/(self.total_MB + 1e-5) >= 0.99
+            print(f"self.total_file_nums={self.total_file_nums} final_nums={final_nums} >>>>>  file_same={file_same}")
+            print(f"self.total_MB={self.total_MB:.3f} final_MB={final_MB:.3f}  >>>>> size_same={size_same}")
             return size_same &  file_same
         return True
     
@@ -236,24 +246,28 @@ class xtunerModelDownload():
                 break
             hf_cache_files = get_hf_cache_files(hf_cache_dir) if os.path.exists(hf_cache_dir) else []
             if self.mid_download_dir == self.final_out_path:
-                cached_mb1 = sum([p_getsize(p_join(self.final_out_path, i))#/1024**2
-                for i in os.listdir(self.final_out_path)])
-                cached_mb4 = sum([p_getsize(f) #/1024**2
-                for f in hf_cache_files])
+                cached_mb1 = sum([p_getsize(p_join(self.final_out_path, i)) for i in os.listdir(self.final_out_path)])
+                cached_mb4 = sum([p_getsize(f)  for f in hf_cache_files])
                 cached_mb = cached_mb1 + cached_mb4
             else:
                 # 获取最近创建的temp文件
-                model_scope_cache_dir_tmp = sorted([
-                    [p_join(model_scope_cache_dir, i), os.stat(p_join(model_scope_cache_dir, i)).st_atime] for i in os.listdir(model_scope_cache_dir)
-                ], key=lambda c:c[1])[-1][0]
-                cached_mb1 = sum([p_getsize(p_join(self.mid_download_dir, i))#/1024**2
-                for i in os.listdir(self.mid_download_dir)])
-                cached_mb2 = sum([p_getsize(p_join(self.final_out_path, i))#/1024**2
-                for i in os.listdir(self.final_out_path)])
-                cached_mb3 = sum([p_getsize(p_join(model_scope_cache_dir_tmp, i))#/1024**2
-                for i in os.listdir(model_scope_cache_dir_tmp)])
-                cached_mb4 = sum([p_getsize(f) #/1024**2
-                for f in hf_cache_files])
+                try:
+                    model_scope_cache_dir_tmp = sorted([
+                        [p_join(model_scope_cache_dir, i), os.stat(p_join(model_scope_cache_dir, i)).st_atime] for i in os.listdir(model_scope_cache_dir)
+                    ], key=lambda c:c[1])[-1][0]
+                except Exception as e:
+                    model_scope_cache_dir_tmp = None
+                
+                cached_mb1 = 0
+                if os.path.exists(self.mid_download_dir):
+                    cached_mb1 = sum([p_getsize(p_join(self.mid_download_dir, i)) for i in os.listdir(self.mid_download_dir)])
+
+                cached_mb2 = sum([p_getsize(p_join(self.final_out_path, i)) for i in os.listdir(self.final_out_path)])
+                cached_mb3 = 0
+                if model_scope_cache_dir_tmp is not None:
+                    cached_mb3 = sum([p_getsize(p_join(model_scope_cache_dir_tmp, i)) for i in os.listdir(model_scope_cache_dir_tmp)])
+
+                cached_mb4 = sum([p_getsize(f)  for f in hf_cache_files])
                 cached_mb = (cached_mb1 + cached_mb2 + cached_mb3 + cached_mb4)
             
             self.bar_.update(round(cached_mb - bf, 3))
@@ -261,7 +275,6 @@ class xtunerModelDownload():
             if cached_mb / (self.total_MB + 1e-5) / 1024**2 > 99.99:
                 break
             time.sleep(self.progress_sleep)
-        self.bar_.close()
         return 
 
     def break_download(self):
@@ -279,10 +292,6 @@ class xtunerModelDownload():
             print('>>>>>>>>>>>>>>>>> stop_thread(self._t_handle_pg)')
             self._t_handle_pg = None
         self.remove_and_create()
-        try:
-            self.bar_.close()
-        except Exception as e:
-            pass
         self._break_flag = True
         return "Done! Model-Download had interrupted!"
 

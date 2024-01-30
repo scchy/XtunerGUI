@@ -122,8 +122,10 @@ class xtunerDataDownload():
         """检查是否下载完整数据
         """
         no_flag = (self.total_file_nums is not None) or (self.total_file_nums <= 0.01)
-        if no_flag and os.path.exists(self.final_out_path):
+        print(f'self.total_file_nums={self.total_file_nums} no_flag={no_flag}')
+        if not no_flag and os.path.exists(self.final_out_path):
             downloaded_files, download_bytes = self._get_final_out_bytes()
+            print(f'downloaded_files={downloaded_files}\ndownload_bytes={download_bytes}')
             file_same = len(downloaded_files) == self.total_file_nums
             size_same = download_bytes / 1024**2 / (self.total_MB + 1e-5) >= 0.99
             return size_same &  file_same
@@ -168,7 +170,6 @@ class xtunerDataDownload():
             left = self.total_MB * 1024**2 - bf
             self.bar_.update(round(left, 3))
 
-        self.bar_.close()
         return 
 
     def break_download(self):
@@ -186,10 +187,6 @@ class xtunerDataDownload():
             print('>>>>>>>>>>>>>>>>> stop_thread(self._t_handle_pg)')
             self._t_handle_pg = None
         self.remove_and_create()
-        try:
-            self.bar_.close()
-        except Exception as e:
-            pass
         self._break_flag = True
         return "Done! Data-Download had interrupted!"
 
