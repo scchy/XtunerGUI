@@ -96,3 +96,4 @@ class quickTrain:
      
         self._break_flag = True
         return f"Done! Xtuner had interrupted!\nwork_dir={self.work_dir}"
+

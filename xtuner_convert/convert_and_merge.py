@@ -3,11 +3,27 @@
 # Create Date: 2024-01-30
 # Author: 爱科研的瞌睡虫
 
-
+import os
 from merge import merge
 from pth_to_hf import convert_to_hf
 
-def convert_and_merged(config_file, pth_model, save_hf_dir, model_path, save_merged_dir):
+def _convert_and_merged(config_file, pth_model, save_hf_dir, model_path, save_merged_dir):
+    convert_to_hf(config_file, pth_model, save_hf_dir)
+    merge(model_path, save_hf_dir, save_merged_dir)
+
+
+def build_convert_and_merged_path(root_dir):
+    work_dir = os.path.join(root_dir, 'work_dir')
+    if not os.path.exists(work_dir):
+        os.system(f'mkdir -p {work_dir}')
+    hf = os.path.join(work_dir, 'xtuner_hf')
+    mg = os.path.join(work_dir, 'xtuner_merge')
+    return work_dir, hf, mg
+
+
+def convert_and_merged(root_dir, config_file, epoch_pth, model_path):
+    work_dir, save_hf_dir, save_merged_dir = build_convert_and_merged_path(root_dir)
+    pth_model = os.path.join(work_dir, epoch_pth)
     convert_to_hf(config_file, pth_model, save_hf_dir)
     merge(model_path, save_hf_dir, save_merged_dir)
 
@@ -20,4 +36,4 @@ if __name__ == '__main__':
     model_path = '/root/ft-oasst1/internlm-chat-7b'
     save_merged_dir = '/root/ft-oasst1/merged5'
 
-    convert_and_merged(config_file, pth_model, save_hf_dir, model_path, save_merged_dir)
+    _convert_and_merged(config_file, pth_model, save_hf_dir, model_path, save_merged_dir)
