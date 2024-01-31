@@ -34,6 +34,15 @@ class xtunerModelDownload():
         self.remove_and_create()
         self.get_download_info()
     
+    def reset_path(self, customer_dir):
+        self.__remove_mid_files()
+        self.__remove_final_files()
+        self.out_path = f'{customer_dir}/download_cache/model_download'
+        print(f'xtunerModelDownload reset_path->{self.out_path}')
+        self.final_out_path = p_join(self.out_path, f'{self.username}_{self.repository}')
+        self.mid_download_dir = self.final_out_path
+        self.__check_create_dir()
+    
     def reset(self, model_name):
         self.remove_and_create()
         print(f'reset({model_name})')

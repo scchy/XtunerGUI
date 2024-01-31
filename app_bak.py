@@ -4,15 +4,11 @@
 
 from xtuner_download.download_model import xtunerModelDownload
 from xtuner_download.download_dataset import xtunerDataDownload
-from xtuner_convert.convert_and_merge import convert_and_merged
-from xtuner_run.shell_train import quickTrain
+from xtuner_run.train import quickTrain
 from appPrepare.files_prepare import DATA_DOWNLOAD_DIR, MODEL_DOWNLOAD_DIR, CUR_PATH, WORK_DIR
-from appPrepare.list_prepare import DATA_LIST, MODEL_LIST, PROMPT_TEMPLATE_LIST
-from build_config import build_and_save_config
+from appPrepare.list_prepare import DATA_LIST, MODEL_LIST
 from tqdm import tqdm
 import gradio as gr
-import warnings
-warnings.filterwarnings(action='ignore')
 
 
 def combine_message_and_history(message, chat_history):
@@ -91,7 +87,7 @@ with gr.Blocks() as demo:
         gr.Markdown("## 2. 微调方法、模型、数据集设置")
         
         with gr.Row():
-            ft_method = gr.Dropdown(choices=['qlora', 'lora', 'full'], value='qlora',label = '微调方法', info='''请选择微调的方法''',interactive=True)
+            ft_method = gr.Dropdown(choices=['qlora', 'lora', '自定义'], value='qlora',label = '微调方法', info='''请选择微调的方法''',interactive=True)
             with gr.Column():
                 model = gr.Dropdown(choices=MODEL_LIST + ['自定义'], value='internlm/internlm-chat-7b',label = '模型', info='请选择配置文件对应的模型',interactive=True)
                 DM_CLS = xtunerModelDownload(
@@ -99,12 +95,11 @@ with gr.Blocks() as demo:
                     out_path=MODEL_DOWNLOAD_DIR,
                     tqdm_class=tqdm
                 )
-                local_path_button.click(DM_CLS.reset_path, inputs=[local_path])
                 model.change(DM_CLS.reset, inputs=[model])
                 with gr.Row():
                     model_download_button = gr.Button('模型下载')
                     model_stop_download = gr.Button('取消下载')
-                    model_path = gr.Textbox(label='模型下载详情')
+                    model_path = gr.Textbox(label='下载详情')
 
                 # model_download_information = gr.Markdown(label='模型下载信息')
                 # model_download_path = gr.Textbox(visible=False)
@@ -118,12 +113,11 @@ with gr.Blocks() as demo:
                     out_path=DATA_DOWNLOAD_DIR,
                     tqdm_class=tqdm 
                 )
-                local_path_button.click(DT_CLS.reset_path, inputs=[local_path])
                 dataset.change(DT_CLS.reset, inputs=[dataset])
                 with gr.Row():
                     dataset_download_button = gr.Button('数据集下载')
                     dataset_stop_download = gr.Button('取消下载')
-                    data_path = gr.Textbox(label='数据下载详情')
+                    data_path = gr.Textbox(label='下载详情')
 
                 # dataset_download_information = gr.Markdown(label='数据集下载信息')
                 # dataset_download_path = gr.Textbox(visible=False)
@@ -157,90 +151,57 @@ with gr.Blocks() as demo:
             gr.Markdown('#### 参数调整方式为...')
         with gr.Tab("基础参数"):
             with gr.Row():
-                deepspeed = gr.Dropdown(choices=['None','zero1','zero2','zero3'], value='None', label='deepspeed算子', info='请选择deepspeed算子类型或关闭deepspeed')
-                lr = gr.Number(label='学习率(lr)', value=2.0e-5, info= '请选择合适的学习率')
-                warmup_ratio = gr.Number(label='预热比', value=0.03, info='预热比例用于在训练初期逐渐增加学习率，以避免训练初期的不稳定性。')
-                batch_size_per_device = gr.Number(label='设备的样本个数(batch_size_per_device)', value=1, info='请选择每个设备的样本个数') 
-                accumulative_counts = gr.Number(label='梯度累计数', value=16, info='请选择合适的梯度累计数') 
-                save_total_limit = gr.Number(label='最多保存ckpt个数', value=2, info='控制保存ckpt的个数') 
+                deepspeed = gr.Dropdown(choices=['None','zero1','zero2','zero3'],label='deepspeed算子', info='请选择deepspeed算子类型或关闭deepspeed')
+                lr = gr.Number(label='学习率(lr)', info= '请选择合适的学习率')
+                warmup_ratio = gr.Number(label='预热比', info='预热比例用于在训练初期逐渐增加学习率，以避免训练初期的不稳定性。')
+                batch_size_per_device = gr.Number(label='设备的样本个数(batch_size_per_device)', info='请选择每个设备的样本个数') 
+                accumulative_counts = gr.Number(label='梯度累计数', info='请选择合适的梯度累计数') 
+                save_total_limit = gr.Number(label='最多保存ckpt个数', info='控制保存ckpt的个数') 
             with gr.Row():
-                num_GPU = gr.Number(label='GPU的数量', value=1, info='请设置训练是所用GPU的数量')
-                max_length = gr.Number(label='数据集最大长度(max_length)', value=2048, info='请设置训练数据最大长度')
-                pack_to_max_length = gr.Dropdown(choices=[True, False], value=True, label='选择合并为最长样本(pack_to_max_length)',info='请选择是否将多条样本打包为一条最长长度的样本')
-                max_epochs = gr.Number(label='训练迭代数(max_epochs)', value=2, info='请选择合适的训练迭代数')
-                save_checkpoint_interval = gr.Number(label='保存权重的间隔', value=1000, info='请输入保存checkpoint的间隔')
+                num_GPU = gr.Number(label='GPU的数量',info='请设置训练是所用GPU的数量')
+                max_length = gr.Number(label='数据集最大长度(max_length)', info='请设置训练数据最大长度')
+                pack_to_max_length = gr.Dropdown(choices=[True, False], label='选择合并为最长样本(pack_to_max_length)',info='请选择是否将多条样本打包为一条最长长度的样本')
+                max_epochs = gr.Number(label='训练迭代数(max_epochs)', info='请选择合适的训练迭代数')
+                save_checkpoint_interval = gr.Number(label='保存权重的间隔', info='请输入保存checkpoint的间隔')
             with gr.Accordion(label="测试问题模版", open=False):
-                evaluation_freq = gr.Number(label='验证对话效果频率(evaluation_freq)', value=100, info='请确定模型每多少轮需要验证一次对话效果')
-                evaluation_system_prompt = gr.Textbox(label = '系统提示词', value='', info='请设置在评估模式下的System Prompt')
-                evaluation_input1 = gr.Textbox(label= '测试问题1',value='请给我介绍五个上海的景点', info='请输入第一个评估的问题')
-                evaluation_input2 = gr.Textbox(label='测试问题2',value='Please tell me five scenic spots in Shanghai', info='请输入第二个评估问题')
+                evaluation_freq = gr.Number(label='验证对话效果频率(evaluation_freq)', info='请确定模型每多少轮需要验证一次对话效果')
+                evaluation_system_prompt = gr.Textbox(label = '系统提示词', info='请设置在评估模式下的System Prompt')
+                evaluation_input1 = gr.Textbox(label= '测试问题1', info='请输入第一个评估的问题')
+                evaluation_input2 = gr.Textbox(label='测试问题2', info='请输入第二个评估问题')
         with gr.Tab('进阶参数'):
             with gr.Row():
-                optim_type = gr.Dropdown(choices=['AdamW'], value='AdamW', label='优化器', info='请选择合适的优化器（默认为AdamW）')
-                weight_decay = gr.Number(label='权重衰减', value=0, info = '权重衰减是一种正则化方法，用于防止过拟合，通过在损失函数中添加与权重大小成比例的项')
+                optim_type = gr.Dropdown(choices=['AdamW'], label='优化器', info='请选择合适的优化器（默认为AdamW）')
+                weight_decay = gr.Number(label='权重衰减', info = '权重衰减是一种正则化方法，用于防止过拟合，通过在损失函数中添加与权重大小成比例的项')
             with gr.Row(): 
-                max_norm = gr.Number(label='梯度剪裁', value=1, info = '梯度裁剪通过限制梯度的最大长度来防止训练过程中的梯度爆炸问题。' )
-                dataloader_num_workers = gr.Number(label='加载数据时使用的线程数量', value=0, info='更多的线程可以加快数据加载速度，但也会增加内存和处理器的使用。' ) 
+                max_norm = gr.Number(label='梯度剪裁', info = '梯度裁剪通过限制梯度的最大长度来防止训练过程中的梯度爆炸问题。' )
+                dataloader_num_workers = gr.Number(label='加载数据时使用的线程数量', info='更多的线程可以加快数据加载速度，但也会增加内存和处理器的使用。' ) 
             with gr.Accordion(label="AdamW优化器betas", open=False):
-                beta1 = gr.Number(label='beta1', value=0.9, info='这个值通常用于计算梯度的一阶矩估计（即梯度的指数移动平均）。较高的 beta1 值意味着过去梯度的权重更大，从而使得优化器更加关注历史梯度信息。')
-                beta2 = gr.Number(label='beta2', value=0.999, info= ' 这个值用于计算梯度的二阶矩估计（即梯度的平方的指数移动平均）。较高的 beta2 值使优化器能够在更长的时间跨度内平滑方差的影响。')
+                beta1 = gr.Number(label='beta1', info='这个值通常用于计算梯度的一阶矩估计（即梯度的指数移动平均）。较高的 beta1 值意味着过去梯度的权重更大，从而使得优化器更加关注历史梯度信息。')
+                beta2 = gr.Number(label='beta2', info= ' 这个值用于计算梯度的二阶矩估计（即梯度的平方的指数移动平均）。较高的 beta2 值使优化器能够在更长的时间跨度内平滑方差的影响。')
             with gr.Accordion(label="提示词模版修改",open=False):
                 with gr.Row():
-                    # todo map function 
-                    prompt_template = gr.Dropdown(PROMPT_TEMPLATE_LIST, label='提示词模版', value='internlm_chat', info='请选择合适的提示词模版')
+                    prompt_template = gr.Dropdown(['internlm-chat'], label='提示词模版', info='请选择合适的提示词模版')
                     prompt_template_show = gr.TextArea(label='提示词模版展示')
         change_config_button = gr.Button('点击生成配置文件')
-        cfg_py_box = gr.Textbox(label='config python文件', info= 'config python文件', value="还未生成")
-        change_config_button.click(
-            build_and_save_config, 
-            inputs=[
-                dataset_personal_path,
-                local_path,
-                ft_method,
-                model_path,
-                data_path,
-                deepspeed,
-                lr,
-                warmup_ratio,
-                batch_size_per_device,
-                accumulative_counts,
-                num_GPU,
-                max_length,
-                pack_to_max_length,
-                max_epochs,
-                save_checkpoint_interval,
-                save_total_limit,
-                evaluation_freq,
-                evaluation_system_prompt,
-                evaluation_input1,
-                evaluation_input2,
-                optim_type,
-                weight_decay,
-                max_norm,
-                dataloader_num_workers,
-                beta1,
-                beta2,
-                prompt_template,
-            ],
-            outputs=[cfg_py_box]
-        )
         wrong_message4 = gr.Markdown()
 
         gr.Markdown("## 4. 微调模型训练")
         TR_CLS = quickTrain(
-            config_py_path=cfg_py_box.value,
+            model_name_or_path=model_path.value,
+            dataset_name_or_path=data_path.value,
             work_dir=f'{local_path.value}/work_dir',
-            deepspeed_seed=deepspeed
+            xtuner_type=ft_method.value
         )
-        change_config_button.click(TR_CLS.reset_cfg_py, inputs=[cfg_py_box])
-        cfg_py_box.change(TR_CLS.reset_cfg_py, inputs=[cfg_py_box])
-        deepspeed.change(TR_CLS.reset_deepspeed, inputs=[deepspeed])
-        local_path_button.click(TR_CLS.reset_work_dir, inputs=[local_path])
+        model_path.change(TR_CLS.set_model_path, inputs=[model_path])
+        data_path.change(TR_CLS.set_data_path, inputs=[data_path])
+        ft_method.change(TR_CLS.set_xtuner_type, inputs=[ft_method])
+        local_path_button.click(TR_CLS.set_work_dir, inputs=[local_path])
         with gr.Row():
             train_model = gr.Button('Xtuner！启动！',size='lg')
             stop_button = gr.Button('训练中断',size='lg')
 
             work_path = gr.Textbox(label='work dir')
+            train_model.click(TR_CLS.set_resume_from_checkpoint)
             train_model.click(TR_CLS.quick_train, outputs=[work_path])
             stop_button.click(TR_CLS.break_train, outputs=[work_path])
             # stop_button.click(empty_break_fn, outputs=[work_path])
@@ -248,15 +209,14 @@ with gr.Blocks() as demo:
         with gr.Accordion(label='模型续训', open=False):
             retry_path = gr.Textbox(label='原配置文件地址', info='请查询原配置文件地址并进行填入')
             retry_button = gr.Button('继续训练')
+            
+            retry_button.click(TR_CLS.set_resume_from_checkpoint, inputs=[retry_path])
+            retry_button.click(TR_CLS.quick_train, outputs=[work_path])
 
-            retry_path.change(TR_CLS.reset_resume_from_checkpoint, inputs=[retry_path])
-            retry_button.click(TR_CLS.resume_train, outputs=[work_path])
-
-        # todo: train_model 或者 retry_button
         with gr.Accordion(label="终端界面",open=False):
             log_file = gr.TextArea(label='日志文件打印', info= '点击可查看模型训练信息')        
-            # train_model.click(TR_CLS.start_log, outputs=[log_file])
-            # retry_button.click(TR_CLS.start_log, outputs=[log_file])
+            train_model.click(TR_CLS.start_log, outputs=[log_file])
+            retry_button.click(TR_CLS.start_log, outputs=[log_file])
     
         wrong_message5 = gr.Markdown()
         gr.Markdown("## 5. 微调结果展示")
@@ -280,15 +240,10 @@ with gr.Blocks() as demo:
         gr.Markdown("## 6. 微调模型转化及测试")
         
         with gr.Accordion(label="模型转换",open=True):
-            # Textbox
-            # select_checkpoint =gr.Dropdown(choices=['epoch_1.pth', 'epoch_1.pth'], value='epoch_1.pth', label='微调模型的权重文件', info = '请选择需要进行测试的模型权重文件并进行转化')
-            select_checkpoint =gr.Textbox(value='epoch_1.pth', label='微调模型的权重文件', info = '请选择需要进行测试的模型权重文件并进行转化')
+            select_checkpoint =gr.Dropdown(choices=[],label='微调模型的权重文件', info = '请选择需要进行测试的模型权重文件并进行转化')
             covert_hf = gr.Button('模型转换',scale=1)
-            covert_hf_path = gr.Textbox(label='模型转换后地址', visible=True) # False
+            covert_hf_path = gr.Textbox(label='模型转换后地址', visible=False)
             wrong_message6 = gr.Markdown()
-
-            # root_dir, config_file, epoch_pth, model_path)
-            covert_hf.click(convert_and_merged, inputs=[local_path, cfg_py_box, select_checkpoint, model_path], outputs=[covert_hf_path]) 
 
 
         # with gr.Accordion(label="模型对话测试", open=True):
@@ -320,7 +275,7 @@ with gr.Blocks() as demo:
 
     #with gr.Tab('微调模型测评（OpenCompass）'):
 
-    demo.load(TR_CLS.read_log, outputs=[log_file], every=1)
+    demo.load(TR_CLS.read_log, outputs=[log_file], every=3)
     demo.launch(share=True) #, enable_queue=True)
 
 

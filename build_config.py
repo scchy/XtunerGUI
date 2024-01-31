@@ -2,6 +2,8 @@ from mmengine import Config, ConfigDict
 from mmengine.config.lazy import LazyObject
 from xtuner.utils import PROMPT_TEMPLATE, SYSTEM_TEMPLATE
 import torch
+import os
+CUR_DIR = os.path.dirname(__file__)
 
 DATA2MAPFN = {
     'tatsu-lab/alpaca': 'alpaca_map_fn',
@@ -20,6 +22,17 @@ DATA2MAPFN = {
     'nampdn-ai/tiny-codes': 'tiny_codes_map_fn',
     'WizardLM/WizardLM_evol_instruct_V2_196k': 'wizardlm_map_fn',
 }
+
+def data_path_map_fn(file):
+    if file in DATA2MAPFN:
+        return DATA2MAPFN[file]
+    for k, v in DATA2MAPFN.items():
+        k_list = k.split('/')
+        k_fix = '_'.join(k_list)
+        if k_fix in file:
+            return v
+    return None
+
 
 """
 save_checkpoint_ratio -> save_checkpoint_interval
@@ -64,7 +77,7 @@ def set_data_related(cfg, dataset, is_custom_dataset, prompt_template, max_lengt
     else:
         traverse_value(cfg._cfg_dict, 'tatsu-lab/alpaca', dataset)
 
-        traverse_keys(cfg._cfg_dict, ('dataset_map_fn', ), LazyObject('xtuner.dataset.map_fns', DATA2MAPFN[dataset]))
+        traverse_keys(cfg._cfg_dict, ('dataset_map_fn', ), LazyObject('xtuner.dataset.map_fns', data_path_map_fn(dataset)))
 
     assert prompt_template in PROMPT_TEMPLATE, \
         f'Expect prompt_template to be one of {PROMPT_TEMPLATE.keys()}, but got {prompt_template}.'
@@ -127,11 +140,11 @@ def build_config(
         optim_type, weight_decay, max_norm, dataloader_num_workers, beta1, beta2, 
         prompt_template):
     if ft_method == 'full':
-        cfg = Config.fromfile('./template_configs/full_finetune.py')
+        cfg = Config.fromfile(f'{CUR_DIR}/template_configs/full_finetune.py')
     elif ft_method == 'lora':
-        cfg = Config.fromfile('./template_configs/lora.py')
+        cfg = Config.fromfile(f'{CUR_DIR}/template_configs/lora.py')
     elif ft_method == 'qlora':
-        cfg = Config.fromfile('./template_configs/qlora.py')
+        cfg = Config.fromfile(f'{CUR_DIR}/template_configs/qlora.py')
     else:
         raise NotImplementedError(f'Expect ft_method to be one of (full, lora, qlora), but got {ft_method}.')
 
@@ -174,11 +187,71 @@ kwargs = dict(
     prompt_template='internlm2_chat'
     )
 
+int_args = [
+    'batch_size_per_device',
+    'accumulative_counts',
+    'num_GPU',
+    'max_length',
+    'pack_to_max_length',
+    'max_epochs',
+    'save_checkpoint_interval',
+    'save_total_limit',
+    'evaluation_freq',
+    'dataloader_num_workers',
+]
+default_args_key = [
+    'ft_method',
+    'model_path',
+    'dataset',
+    'deepspeed',
+    'lr',
+    'warmup_ratio',
+    'batch_size_per_device',
+    'accumulative_counts',
+    'num_GPU',
+    'max_length',
+    'pack_to_max_length',
+    'max_epochs',
+    'save_checkpoint_interval',
+    'save_total_limit',
+    'evaluation_freq',
+    'evaluation_system_prompt',
+    'evaluation_input1',
+    'evaluation_input2',
+    'optim_type',
+    'weight_decay',
+    'max_norm',
+    'dataloader_num_workers',
+    'beta1',
+    'beta2',
+    'prompt_template',
+]
 
-def build_and_save_config(config_file_path, **kwargs):
+def build_config_path(root_dir):
+    work_dir = os.path.join(root_dir, 'work_dir')
+    if not os.path.exists(work_dir):
+        os.system(f'mkdir -p {work_dir}')
+    return os.path.join(work_dir, 'xtuner_config.py')
+
+
+def build_and_save_config(dataset_personal_path, root_dir, *args, **kwargs):
+    kwargs.update(
+        dict(zip(default_args_key, list(args)))
+    )
+    print(f'dataset_personal_path={dataset_personal_path}||')
+    kwargs['is_custom_dataset'] = False
+    if dataset_personal_path is not None and len(dataset_personal_path) >= 3:
+        kwargs['is_custom_dataset'] = True 
+        kwargs['dataset'] = dataset_personal_path
+    for k in int_args:
+        kwargs[k] = int(kwargs[k])
+    print(f'kwargs={kwargs}')
     cfg = build_config(**kwargs)
-    cfg.dump(config_file_path)
+    cfg_py = build_config_path(root_dir)
+    cfg.dump(cfg_py)
+    print('cfg_py=', cfg_py)
+    return cfg_py
 
 
 if __name__ == '__main__':
-    build_and_save_config('./config.py', **kwargs)
+    build_and_save_config('.', **kwargs)

@@ -3,5 +3,7 @@
   - [X] test 
 - [X] model sft
   - [X] code
-  - [ ] app add func
+  - [X] app add func
+  - [ ] break & continue
+  - [ ] log print 
 
