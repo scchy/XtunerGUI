@@ -30,7 +30,7 @@ class quickTrain:
     
     def reset_resume_from_checkpoint(self, work_dir):
         print(f"reset_resume_from_checkpoint({work_dir})")
-        self.reset_resume_from_checkpoint = work_dir
+        self.resume_from_checkpoint = work_dir
     
     def reset_deepspeed(self, deepspeed):
         print(f"reset_deepspeed({deepspeed})")
@@ -52,7 +52,7 @@ class quickTrain:
         if os.path.exists(self.log_file):
             os.system(f'rm -rf {self.log_file}')
     
-    def _quick_train(self, progress=gr.Progress(track_tqdm=True)):
+    def _quick_train(self, resume, progress=gr.Progress(track_tqdm=True)):
         self.remove_log_file()
         add_ = resume_ = ''
         if str(self.deepspeed_seed).lower() not in ['none', 'dropdown']:
@@ -61,20 +61,32 @@ class quickTrain:
         if self.resume_from_checkpoint is not None:
             resume_ = f'--resume {self.resume_from_checkpoint}'
         
-        exec_ = f'xtuner train {self.config_py_path} --work-dir {self.work_dir} {add_} {resume_} > {self.log_file} 2>&1'
+        if resume:
+            exec_ = f'xtuner train {self.config_py_path} --work-dir {self.work_dir} {add_} {resume_} > {self.log_file} 2>&1'
+        else:
+            exec_ = f'xtuner train {self.config_py_path} --work-dir {self.work_dir} {add_} > {self.log_file} 2>&1'
+            
         print(f'exec={exec_}')
         os.system(exec_)
-    
-    def _t_start(self):
-        self._t_handle_tr = threading.Thread(target=self._quick_train, name=f'X-train-{self.run_type}', daemon=True)
+
+    def _t_start(self, resume=0):
+        self._t_handle_tr = threading.Thread(target=self._quick_train, args=(resume,), name=f'X-train-{self.run_type}', daemon=True)
         self._t_handle_tr.start()
 
     def quick_train(self, progress=gr.Progress(track_tqdm=True)):
         self._break_flag = False
-        self._t_start()
+        self._t_start(0)
         self._t_handle_tr.join()
         if self._break_flag:
             return f"Done! Xtuner had interrupted!\nwork_dir={self.work_dir}"
+        return self.work_dir
+
+    def resume_train(self, progress=gr.Progress(track_tqdm=True)):
+        self._break_flag = False
+        self._t_start(1)
+        self._t_handle_tr.join()
+        if self._break_flag:
+            return f"Done! Xtuner had interrupted!\nRESUME work_dir={self.work_dir}"
         return self.work_dir
     
     def read_log(self):

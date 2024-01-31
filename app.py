@@ -4,12 +4,15 @@
 
 from xtuner_download.download_model import xtunerModelDownload
 from xtuner_download.download_dataset import xtunerDataDownload
+from xtuner_convert.convert_and_merge import convert_and_merged
 from xtuner_run.shell_train import quickTrain
 from appPrepare.files_prepare import DATA_DOWNLOAD_DIR, MODEL_DOWNLOAD_DIR, CUR_PATH, WORK_DIR
 from appPrepare.list_prepare import DATA_LIST, MODEL_LIST, PROMPT_TEMPLATE_LIST
 from build_config import build_and_save_config
 from tqdm import tqdm
 import gradio as gr
+import warnings
+warnings.filterwarnings(action='ignore')
 
 
 def combine_message_and_history(message, chat_history):
@@ -247,7 +250,7 @@ with gr.Blocks() as demo:
             retry_button = gr.Button('继续训练')
 
             retry_path.change(TR_CLS.reset_resume_from_checkpoint, inputs=[retry_path])
-            retry_button.click(TR_CLS.quick_train, outputs=[work_path])
+            retry_button.click(TR_CLS.resume_train, outputs=[work_path])
 
         # todo: train_model 或者 retry_button
         with gr.Accordion(label="终端界面",open=False):
@@ -277,10 +280,15 @@ with gr.Blocks() as demo:
         gr.Markdown("## 6. 微调模型转化及测试")
         
         with gr.Accordion(label="模型转换",open=True):
-            select_checkpoint =gr.Dropdown(choices=[],label='微调模型的权重文件', info = '请选择需要进行测试的模型权重文件并进行转化')
+            # Textbox
+            # select_checkpoint =gr.Dropdown(choices=['epoch_1.pth', 'epoch_1.pth'], value='epoch_1.pth', label='微调模型的权重文件', info = '请选择需要进行测试的模型权重文件并进行转化')
+            select_checkpoint =gr.Textbox(value='epoch_1.pth', label='微调模型的权重文件', info = '请选择需要进行测试的模型权重文件并进行转化')
             covert_hf = gr.Button('模型转换',scale=1)
-            covert_hf_path = gr.Textbox(label='模型转换后地址', visible=False)
+            covert_hf_path = gr.Textbox(label='模型转换后地址', visible=True) # False
             wrong_message6 = gr.Markdown()
+
+            # root_dir, config_file, epoch_pth, model_path)
+            covert_hf.click(convert_and_merged, inputs=[local_path, cfg_py_box, select_checkpoint, model_path], outputs=[covert_hf_path]) 
 
 
         # with gr.Accordion(label="模型对话测试", open=True):

@@ -4,8 +4,8 @@
 # Author: 爱科研的瞌睡虫
 
 import os
-from merge import merge
-from pth_to_hf import convert_to_hf
+from .merge import merge
+from .pth_to_hf import convert_to_hf
 
 def _convert_and_merged(config_file, pth_model, save_hf_dir, model_path, save_merged_dir):
     convert_to_hf(config_file, pth_model, save_hf_dir)
@@ -18,14 +18,27 @@ def build_convert_and_merged_path(root_dir):
         os.system(f'mkdir -p {work_dir}')
     hf = os.path.join(work_dir, 'xtuner_hf')
     mg = os.path.join(work_dir, 'xtuner_merge')
+    # clear
+    if os.path.exists(hf):
+        os.system(f'rm -rf {hf}')
+    if os.path.exists(mg):
+        os.system(f'rm -rf {mg}')
     return work_dir, hf, mg
 
 
 def convert_and_merged(root_dir, config_file, epoch_pth, model_path):
     work_dir, save_hf_dir, save_merged_dir = build_convert_and_merged_path(root_dir)
     pth_model = os.path.join(work_dir, epoch_pth)
+    print(
+        f'config_file = {config_file}'
+        ,f'\npth_model = {pth_model}' 
+        ,f'\nsave_hf_dir = {save_hf_dir}' 
+        ,f'\nmodel_path ={model_path}' 
+        ,f'\nsave_merged_dir ={save_merged_dir}' 
+    )
     convert_to_hf(config_file, pth_model, save_hf_dir)
     merge(model_path, save_hf_dir, save_merged_dir)
+    return save_merged_dir
 
 
 if __name__ == '__main__':
