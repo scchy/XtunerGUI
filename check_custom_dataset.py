@@ -38,7 +38,7 @@ def check_custom_dataset(path):
                         f' {message_idx} message is {single_conversation}.'
                         f'Here is an example:\n{DATA_EXAMPLE}')
     
-    return None
+    return 'Data is OK.'
 
 out = check_custom_dataset('/mnt/petrelfs/caoweihan/projects/xtuner/data.json')
 if out is None:
