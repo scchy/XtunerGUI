@@ -89,13 +89,32 @@ class quickTrain:
             return f"Done! Xtuner had interrupted!\nRESUME work_dir={self.work_dir}"
         return self.work_dir
     
+    def _tail(self, n=100):
+        line_list = []
+        with open(self.log_file, "rb") as f:
+            f.seek(0, 2)
+            while 1:
+                if f.read(1) == b"\n":
+                    now_index = f.tell()
+                    line_list.append(f.readline())
+                    f.seek(now_index, 0)
+                if len(line_list) >= n:
+                    return line_list[::-1]
+                if f.tell() <= 1:
+                    f.seek(0, 0)
+                    line_list.append(f.readline())
+                    return line_list[::-1]
+                f.seek(-2, 1)
+    
     def read_log(self):
         if self._t_handle_tr is None:
             return ""
         if os.path.exists(self.log_file):
-            with open(self.log_file, 'r') as f:
-                res_ = f.readlines()
-            return ''.join(res_)
+            # with open(self.log_file, 'r') as f:
+            #     res_ = f.readlines()
+            # return ''.join(res_)
+            line_list = self._tail(5)
+            return b"".join(line_list).decode()
 
     def break_train(self):
         # 然后杀死该线程
