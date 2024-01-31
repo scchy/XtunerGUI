@@ -29,8 +29,17 @@ class xtunerDataDownload():
         self._t_handle_pg = None
         self._break_flag = False
         self._get_info_flag = False
-        self.remove_and_create()
+        self.__check_create_dir()
         self.get_download_info()
+    
+    def reset_path(self, customer_dir):
+        self.__remove_mid_files()
+        self.__remove_final_files()
+        self.out_path = f'{customer_dir}/download_cache/data_download'
+        print(f'xtunerDataDownload reset_path->{self.out_path}')
+        self.final_out_path = p_join(self.out_path, f'{self.username}_{self.repository}')
+        self.mid_download_dir = self.final_out_path
+        self.__check_create_dir()
 
     def reset(self, data_name):
         self.remove_and_create()
@@ -43,7 +52,7 @@ class xtunerDataDownload():
         self._t_handle_pg = None
         self._break_flag = False
         self._get_info_flag = False
-        self.remove_and_create()
+        self.__check_create_dir()
         self.get_download_info()
 
     def get_download_info(self):

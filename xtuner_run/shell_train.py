@@ -24,9 +24,13 @@ class quickTrain:
         self.run_type = run_type
         self.deepspeed_seed = deepspeed_seed
         self._t_handle_tr = None
-        self.log_file = os.path.join(CUR_DIR, '__xtuner_tr.log')
+        self.log_file = os.path.join(self.work_dir, '__xtuner_tr.log')
         self.remove_log_file()
         print(f'config_py_path={config_py_path}')
+    
+    def reset_resume_from_checkpoint(self, work_dir):
+        print(f"reset_resume_from_checkpoint({work_dir})")
+        self.reset_resume_from_checkpoint = work_dir
     
     def reset_deepspeed(self, deepspeed):
         print(f"reset_deepspeed({deepspeed})")
@@ -35,6 +39,10 @@ class quickTrain:
     def reset_work_dir(self, local_path):
         print(f"reset_work_dir({local_path})")
         self.work_dir = os.path.join(local_path, 'work_dir')
+        if not os.path.exists(self.work_dir):
+            os.system(f'mkdir -p {self.work_dir}')
+        self.log_file = os.path.join(self.work_dir, '__xtuner_tr.log')
+        self.remove_log_file()
 
     def reset_cfg_py(self, cfg_py):
         print(f"reset_cfg_py({cfg_py})")
@@ -47,13 +55,13 @@ class quickTrain:
     def _quick_train(self, progress=gr.Progress(track_tqdm=True)):
         self.remove_log_file()
         add_ = resume_ = ''
-        if str(self.deepspeed_seed).lower() != 'none':
+        if str(self.deepspeed_seed).lower() not in ['none', 'dropdown']:
             add_ = f'--deepspeed deepspeed_{self.deepspeed_seed} '
         
         if self.resume_from_checkpoint is not None:
             resume_ = f'--resume {self.resume_from_checkpoint}'
         
-        exec_ = f'xtuner train {self.config_py_path} --work-dir {self.work_dir} {add_} {resume_} > {self.log_file}'
+        exec_ = f'xtuner train {self.config_py_path} --work-dir {self.work_dir} {add_} {resume_} > {self.log_file} 2>&1'
         print(f'exec={exec_}')
         os.system(exec_)
     
@@ -66,7 +74,7 @@ class quickTrain:
         self._t_start()
         self._t_handle_tr.join()
         if self._break_flag:
-            return "Done! Xtuner had interrupted!"
+            return f"Done! Xtuner had interrupted!\nwork_dir={self.work_dir}"
         return self.work_dir
     
     def read_log(self):
@@ -87,4 +95,4 @@ class quickTrain:
             self._t_handle_tr = None
      
         self._break_flag = True
-        return "Done! Xtuner had interrupted!"
+        return f"Done! Xtuner had interrupted!\nwork_dir={self.work_dir}"

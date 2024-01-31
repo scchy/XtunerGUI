@@ -96,6 +96,7 @@ with gr.Blocks() as demo:
                     out_path=MODEL_DOWNLOAD_DIR,
                     tqdm_class=tqdm
                 )
+                local_path_button.click(DM_CLS.reset_path, inputs=[local_path])
                 model.change(DM_CLS.reset, inputs=[model])
                 with gr.Row():
                     model_download_button = gr.Button('模型下载')
@@ -114,6 +115,7 @@ with gr.Blocks() as demo:
                     out_path=DATA_DOWNLOAD_DIR,
                     tqdm_class=tqdm 
                 )
+                local_path_button.click(DT_CLS.reset_path, inputs=[local_path])
                 dataset.change(DT_CLS.reset, inputs=[dataset])
                 with gr.Row():
                     dataset_download_button = gr.Button('数据集下载')
@@ -152,7 +154,7 @@ with gr.Blocks() as demo:
             gr.Markdown('#### 参数调整方式为...')
         with gr.Tab("基础参数"):
             with gr.Row():
-                deepspeed = gr.Dropdown(choices=['None','zero1','zero2','zero3'], label='deepspeed算子', value='None', info='请选择deepspeed算子类型或关闭deepspeed')
+                deepspeed = gr.Dropdown(choices=['None','zero1','zero2','zero3'], value='None', label='deepspeed算子', info='请选择deepspeed算子类型或关闭deepspeed')
                 lr = gr.Number(label='学习率(lr)', value=2.0e-5, info= '请选择合适的学习率')
                 warmup_ratio = gr.Number(label='预热比', value=0.03, info='预热比例用于在训练初期逐渐增加学习率，以避免训练初期的不稳定性。')
                 batch_size_per_device = gr.Number(label='设备的样本个数(batch_size_per_device)', value=1, info='请选择每个设备的样本个数') 
@@ -193,7 +195,7 @@ with gr.Blocks() as demo:
                 local_path,
                 ft_method,
                 model_path,
-                dataset, # data_path,
+                data_path,
                 deepspeed,
                 lr,
                 warmup_ratio,
@@ -227,9 +229,10 @@ with gr.Blocks() as demo:
             work_dir=f'{local_path.value}/work_dir',
             deepspeed_seed=deepspeed
         )
+        change_config_button.click(TR_CLS.reset_cfg_py, inputs=[cfg_py_box])
         cfg_py_box.change(TR_CLS.reset_cfg_py, inputs=[cfg_py_box])
         deepspeed.change(TR_CLS.reset_deepspeed, inputs=[deepspeed])
-        local_path.change(TR_CLS.reset_work_dir, inputs=[local_path])
+        local_path_button.click(TR_CLS.reset_work_dir, inputs=[local_path])
         with gr.Row():
             train_model = gr.Button('Xtuner！启动！',size='lg')
             stop_button = gr.Button('训练中断',size='lg')
@@ -243,8 +246,10 @@ with gr.Blocks() as demo:
             retry_path = gr.Textbox(label='原配置文件地址', info='请查询原配置文件地址并进行填入')
             retry_button = gr.Button('继续训练')
 
+            retry_path.change(TR_CLS.reset_resume_from_checkpoint, inputs=[retry_path])
             retry_button.click(TR_CLS.quick_train, outputs=[work_path])
 
+        # todo: train_model 或者 retry_button
         with gr.Accordion(label="终端界面",open=False):
             log_file = gr.TextArea(label='日志文件打印', info= '点击可查看模型训练信息')        
             # train_model.click(TR_CLS.start_log, outputs=[log_file])

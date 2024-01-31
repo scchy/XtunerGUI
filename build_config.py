@@ -23,6 +23,17 @@ DATA2MAPFN = {
     'WizardLM/WizardLM_evol_instruct_V2_196k': 'wizardlm_map_fn',
 }
 
+def data_path_map_fn(file):
+    if file in DATA2MAPFN:
+        return DATA2MAPFN[file]
+    for k, v in DATA2MAPFN.items():
+        k_list = k.split('/')
+        k_fix = '_'.join(k_list)
+        if k_fix in file:
+            return v
+    return None
+
+
 """
 save_checkpoint_ratio -> save_checkpoint_interval
 accumulative_counts -> accumulative_counts
@@ -66,7 +77,7 @@ def set_data_related(cfg, dataset, is_custom_dataset, prompt_template, max_lengt
     else:
         traverse_value(cfg._cfg_dict, 'tatsu-lab/alpaca', dataset)
 
-        traverse_keys(cfg._cfg_dict, ('dataset_map_fn', ), LazyObject('xtuner.dataset.map_fns', DATA2MAPFN[dataset]))
+        traverse_keys(cfg._cfg_dict, ('dataset_map_fn', ), LazyObject('xtuner.dataset.map_fns', data_path_map_fn(dataset)))
 
     assert prompt_template in PROMPT_TEMPLATE, \
         f'Expect prompt_template to be one of {PROMPT_TEMPLATE.keys()}, but got {prompt_template}.'
@@ -176,6 +187,18 @@ kwargs = dict(
     prompt_template='internlm2_chat'
     )
 
+int_args = [
+    'batch_size_per_device',
+    'accumulative_counts',
+    'num_GPU',
+    'max_length',
+    'pack_to_max_length',
+    'max_epochs',
+    'save_checkpoint_interval',
+    'save_total_limit',
+    'evaluation_freq',
+    'dataloader_num_workers',
+]
 default_args_key = [
     'ft_method',
     'model_path',
@@ -204,17 +227,27 @@ default_args_key = [
     'prompt_template',
 ]
 
+def build_config_path(root_dir):
+    work_dir = os.path.join(root_dir, 'work_dir')
+    if not os.path.exists(work_dir):
+        os.system(f'mkdir -p {work_dir}')
+    return os.path.join(work_dir, 'xtuner_config.py')
+
+
 def build_and_save_config(dataset_personal_path, root_dir, *args, **kwargs):
     kwargs.update(
         dict(zip(default_args_key, list(args)))
     )
+    print(f'dataset_personal_path={dataset_personal_path}||')
     kwargs['is_custom_dataset'] = False
-    if dataset_personal_path is not None:
+    if dataset_personal_path is not None and len(dataset_personal_path) >= 3:
         kwargs['is_custom_dataset'] = True 
         kwargs['dataset'] = dataset_personal_path
-    print(kwargs)
+    for k in int_args:
+        kwargs[k] = int(kwargs[k])
+    print(f'kwargs={kwargs}')
     cfg = build_config(**kwargs)
-    cfg_py = os.path.join(root_dir, 'work_dir/xtuner_config.py')
+    cfg_py = build_config_path(root_dir)
     cfg.dump(cfg_py)
     print('cfg_py=', cfg_py)
     return cfg_py
