@@ -12,7 +12,222 @@ from build_config import build_and_save_config
 from tqdm import tqdm
 import gradio as gr
 import warnings
+from check_custom_dataset import check_custom_dataset
 warnings.filterwarnings(action='ignore')
+
+openai_format = ''' 
+[
+    {
+        "messages": 
+        [
+            { "role": "system", "content": "You are an assistant that occasionally misspells words." },
+            { "role": "user", "content": "Tell me a story." },
+            { "role": "assistant", "content": "One day a student went to schoool." }
+        ]
+    },
+    
+    {
+        "messages": 
+        [
+            { "role": "user", "content": "Tell me a story." },
+            { "role": "assistant", "content": "One day a student went to schoool." }
+        ]
+    } 
+]
+'''
+
+def read_first_ten_lines(file_path):
+    try:
+        with open(file_path, 'r', encoding='utf-8') as file:
+            lines = file.readlines()  # 读取所有行
+            first_ten_lines = lines[:10]  # 获取前十行
+            return ''.join(first_ten_lines)  # 将前十行合并为一个字符串并返回
+    except Exception as e:
+        return f"Error reading file: {str(e)}"
+
+MODEL_TO_TEMPLATE = {
+    "baichuan-inc/Baichuan-7B": "default",
+    "baichuan-inc/Baichuan-13B-Base": "default",
+    "baichuan-inc/Baichuan-13B-Chat": "baichuan_chat",
+    "baichuan-inc/Baichuan2-7B-Base": "default",
+    "baichuan-inc/Baichuan2-7B-Chat": "baichuan2_chat",
+    "baichuan-inc/Baichuan2-13B-Base": "default",
+    "baichuan-inc/Baichuan2-13B-Chat": "baichuan2_chat",
+    "THUDM/chatglm2-6b": "chatglm2",
+    "THUDM/chatglm3-6b": "chatglm3",
+    "THUDM/chatglm3-6b-base": "chatglm3",
+    "deepseek-ai/deepseek-coder-6.7b-base": "deepseek_coder",
+    "deepseek-ai/deepseek-coder-6.7b-instruct": "deepseek_coder",
+    "internlm/internlm-7b": "default",
+    "internlm/internlm-20b": "default",
+    "internlm/internlm-chat-7b": "internlm_chat",
+    "internlm/internlm-chat-20b": "internlm_chat",
+    "huggyllama/llama-7b": "default",
+    "meta-llama/Llama-2-7b-hf": "llama2_chat",
+    "meta-llama/Llama-2-7b-chat-hf": "llama2_chat",
+    "meta-llama/Llama-2-70b-hf": "llama2_chat",
+    "lmsys/vicuna-7b-v1.5": "vicuna",
+    "lmsys/vicuna-13b-v1.5": "vicuna",
+    "mistralai/Mistral-7B-v0.1": "mistral",
+    "mistralai/Mixtral-8x7B-v0.1": "mixtral",
+    "mistralai/Mixtral-8x7B-Instruct-v0.1": "mixtral",
+    "Qwen/Qwen-1_8B": "default",
+    "Qwen/Qwen-1_8B-Chat": "qwen_chat",
+    "Qwen/Qwen-7B": "default",
+    "Qwen/Qwen-7B-Chat": "qwen_chat",
+    "Qwen/Qwen-72B": "default",
+    "Qwen/Qwen-72B-Chat": "qwen_chat",
+    "bigcode/starcoder": "default",
+    "01-ai/Yi-6B": "default",
+    "01-ai/Yi-34B": "default",
+    "HuggingFaceH4/zephyr-7b-beta": "zephyr",
+    "deepseek-ai/deepseek-moe-16b-base": "deepseek_moe",
+    "deepseek-ai/deepseek-moe-16b-chat": "deepseek_moe",
+    "internlm/internlm2-7b": "default",
+    "internlm/internlm2-20b": "default",
+    "internlm/internlm2-chat-7b": "internlm2_chat",
+    "internlm/internlm2-chat-20b": "internlm2_chat"
+}
+
+
+def get_template_name_by_model(model_full_name):
+    return MODEL_TO_TEMPLATE.get(model_full_name, "Unknown template")
+
+
+from mmengine.config import ConfigDict
+PROMPT_TEMPLATE = ConfigDict(
+    default=dict(
+        SYSTEM='<|System|>:{system}\n',
+        INSTRUCTION='<|User|>:{input}\n<|Bot|>:',
+        SEP='\n'),
+    zephyr=dict(
+        SYSTEM='<|system|>\n{system}\n',
+        INSTRUCTION='<|user|>\n{input}\n<|assistant|>\n',
+        SEP='\n'),
+    internlm_chat=dict(
+        SYSTEM='<|System|>:{system}\n',
+        INSTRUCTION='<|User|>:{input}<eoh>\n<|Bot|>:',
+        SUFFIX='<eoa>',
+        SUFFIX_AS_EOS=True,
+        SEP='\n',
+        STOP_WORDS=['<eoa>']),
+    internlm2_chat=dict(
+        SYSTEM='<|im_start|>system\n{system}<|im_end|>\n',
+        INSTRUCTION=('<|im_start|>user\n{input}<|im_end|>\n'
+                     '<|im_start|>assistant\n'),
+        SUFFIX='<|im_end|>',
+        SUFFIX_AS_EOS=True,
+        SEP='\n',
+        STOP_WORDS=['<|im_end|>']),
+    moss_sft=dict(
+        SYSTEM='{system}\n',
+        INSTRUCTION='<|Human|>: {input}<eoh>\n',
+        SEP='\n',
+        STOP_WORDS=['<eoc>', '<eom>']),
+    llama2_chat=dict(
+        SYSTEM=(
+            '[INST] <<SYS>>\n You are a helpful, respectful and honest '
+            'assistant. Always answer as helpfully as possible, while being '
+            'safe. Your answers should not include any harmful, unethical, '
+            'racist, sexist, toxic, dangerous, or illegal content. Please '
+            'ensure that your responses are socially unbiased and positive in '
+            'nature.\n{system}\n<</SYS>>\n [/INST] '),
+        INSTRUCTION='[INST] {input} [/INST]',
+        SEP='\n'),
+    code_llama_chat=dict(
+        SYSTEM='{system}\n', INSTRUCTION='[INST] {input} [/INST]'),
+    chatglm2=dict(
+        SYSTEM='{system}\n',
+        INSTRUCTION='[Round {round}]\n\n问：{input}\n\n答：',
+        SEP='\n\n'),
+    chatglm3=dict(
+        SYSTEM='<|system|>\n{system}',
+        INSTRUCTION='<|user|>\n{input}<|assistant|>\n',
+        SEP='\n'),
+    qwen_chat=dict(
+        SYSTEM=('\n<|im_start|>system\n{system}<|im_end|>'),
+        INSTRUCTION=(
+            '\n<|im_start|>user\n{input}<|im_end|>\n<|im_start|>assistant\n'),
+        SUFFIX='<|im_end|>',
+        SUFFIX_AS_EOS=True,
+        SEP='\n',
+        STOP_WORDS=['<|im_end|>', '<|endoftext|>']),
+    baichuan_chat=dict(
+        SYSTEM='{system}\n',
+        INSTRUCTION='<reserved_102>{input}<reserved_103>',
+        SEP='\n'),
+    baichuan2_chat=dict(
+        SYSTEM='{system}\n',
+        INSTRUCTION='<reserved_106>{input}<reserved_107>',
+        SEP='\n'),
+    wizardlm=dict(
+        SYSTEM=('A chat between a curious user and an artificial '
+                'intelligence assistant. The assistant gives '
+                'helpful, detailed, and polite answers to the '
+                'user\'s questions. {system}\n '),
+        INSTRUCTION=('USER: {input} ASSISTANT:'),
+        SEP='\n'),
+    wizardcoder=dict(
+        SYSTEM=(
+            'Below is an instruction that describes a task. '
+            'Write a response that appropriately completes the request.\n\n'
+            '{system}\n '),
+        INSTRUCTION=('### Instruction:\n{input}\n\n### Response:'),
+        SEP='\n\n'),
+    vicuna=dict(
+        SYSTEM=('A chat between a curious user and an artificial '
+                'intelligence assistant. The assistant gives '
+                'helpful, detailed, and polite answers to the '
+                'user\'s questions. {system}\n '),
+        INSTRUCTION=('USER: {input} ASSISTANT:'),
+        SEP='\n'),
+    deepseek_coder=dict(
+        SYSTEM=('You are an AI programming assistant, utilizing '
+                'the DeepSeek Coder model, developed by DeepSeek'
+                'Company, and you only answer questions related '
+                'to computer science. For politically sensitive '
+                'questions, security and privacy issues, and '
+                'other non-computer science questions, you will '
+                'refuse to answer. {system}\n'),
+        INSTRUCTION=('### Instruction:\n{input}\n### Response:\n'),
+        SEP='\n'),
+    # TODO: deprecation, v0.2.0
+    deepseekcoder=dict(
+        SYSTEM=('You are an AI programming assistant, utilizing '
+                'the DeepSeek Coder model, developed by DeepSeek'
+                'Company, and you only answer questions related '
+                'to computer science. For politically sensitive '
+                'questions, security and privacy issues, and '
+                'other non-computer science questions, you will '
+                'refuse to answer. {system}\n'),
+        INSTRUCTION=('### Instruction:\n{input}\n### Response:\n'),
+        SEP='\n'),
+    deepseek_moe=dict(
+        SYSTEM=('[INST] {system} [/INST]\n'),
+        INSTRUCTION=('[INST] {input} [/INST]'),
+        SEP='\n'),
+    mistral=dict(
+        SYSTEM=('[INST] {system} [/INST]\n'),
+        INSTRUCTION=('[INST] {input} [/INST]'),
+        SEP='\n'),
+    mixtral=dict(
+        SYSTEM=('[INST] {system} [/INST]\n'),
+        INSTRUCTION=('[INST] {input} [/INST]'),
+        SEP='\n'),
+)
+
+def get_template_format_by_name(template_name):
+    template = PROMPT_TEMPLATE.get(template_name, None)
+    if template is None:
+        return "Template not found"
+    else:
+        for key, value in template.items():
+            return f"{key}: {value}"
+
+def list_all_supported_templates():
+    # 加载PROMPT_TEMPLATE
+    templates = list(PROMPT_TEMPLATE.keys())
+    return templates
 
 
 def combine_message_and_history(message, chat_history):
@@ -134,27 +349,35 @@ with gr.Blocks() as demo:
             with gr.Accordion(label="自定义模型",open=False):
                 personal_model_path = gr.Textbox(label='自定义模型本地路径', info = '请输入模型的本地路径在下方，或将文件压缩上传到下方的位置（建议直接填写本地路径）')
                 personal_model = gr.Files(label='请上传自定义模型文件')
-                check_personal_model = gr.Button('检查模型是否符合要求(请务必点击！)')
+                check_personal_model = gr.Button('模型检查及提示词模板自动匹配（请务必点击！）')
                 wrong_message2 = gr.Markdown() #可用于承接检查后得到的结果
             with gr.Accordion(label="自定义数据集（仅支持OpenAI格式）",open=False):
                 with gr.Row():
                     with gr.Column():
                         dataset_type = gr.Dropdown(choices=['OpenAI'],value='OpenAI',label = '支持的数据集格式', interactive=False)
-                        dataset_type_preview = gr.TextArea(label='OpenAI数据集格式展示', info= '该数据集的标准格式如下所示，请将自定义的数据集格式转化为该格式。')
+                        dataset_type_preview = gr.TextArea(label='OpenAI数据集格式展示', info= '该数据集的标准格式如下所示，请将自定义的数据集格式转化为该格式。',value=openai_format)
                         #dataset_type_preview = gr.JSON(label='数据集格式展示')
                     with gr.Column():
                         dataset_personal_path = gr.Textbox(label = '数据集本地路径', info='请填入本地数据集路径或直接在下方上传数据文件')
-                        dataset_personal = gr.Files(label='请上传自定义的数据集或在上方填入本地路径')
+                        dataset_personal_path_button = gr.Button('请点击上传数据集本地路径')
+                        dataset_personal = gr.Files(label='请上传自定义的数据集或在上方填入本地路径',type='filepath')
                 check_personal_dataset = gr.Button('检查数据集是否符合要求')
                 wrong_message3 = gr.Markdown() #判定数据集格式是否符合要求，符合就在上面显示
+                check_personal_dataset.click(check_custom_dataset, inputs=[dataset_personal_path, dataset_personal], outputs=wrong_message3)
+                
                 with gr.Accordion(label="数据集预览",open=False):
                     dataset_preview = gr.TextArea(label='数据集展示', info = '截取前n行内容，可用于对比原数据集格式。')
                     #dataset_preview = gr.JSON(label='数据集展示')
+                dataset_personal_path_button.click(fn=read_first_ten_lines, inputs=dataset_personal_path, outputs=dataset_preview)
+                dataset_personal.change(fn=read_first_ten_lines, inputs=dataset_personal_path, outputs=dataset_preview)
         with gr.Accordion(label="对应提示词模版展示",open=False):
             with gr.Row():
                 # todo map function 
-                prompt_template = gr.Dropdown(PROMPT_TEMPLATE_LIST, label='提示词模版', value='internlm_chat', info='请选择合适的提示词模版')
+                prompt_template = gr.Dropdown(PROMPT_TEMPLATE_LIST, label='提示词模版', info='请选择合适的提示词模版',interactive=True)
                 prompt_template_show = gr.TextArea(label='提示词模版展示')
+                
+                prompt_template.change(fn=get_template_format_by_name,inputs=prompt_template, outputs=prompt_template_show)
+                model.change(fn=get_template_name_by_model,inputs=model, outputs=prompt_template)
         gr.Markdown("## 3. 微调参数设置")
         with gr.Accordion(label="参数调整指南",open=False):
             gr.Markdown('#### 参数调整方式为...')
@@ -223,6 +446,8 @@ with gr.Blocks() as demo:
             ],
             outputs=[cfg_py_box]
         )
+
+
         wrong_message4 = gr.Markdown()
 
         gr.Markdown("## 4. 微调模型训练")
@@ -265,8 +490,8 @@ with gr.Blocks() as demo:
                 num_pth = gr.Number(label='权重文件数量',scale=1)
             with gr.Row():
                 
-                lr_plot = gr.Plot(label='学习率变化图')
-                loss_graph = gr.Plot(label='损失变化图')
+                lr_plot = gr.Image(label='学习率变化图',container=False,show_download_button=False,interactive=False)
+                loss_graph = gr.Image(label='损失变化图',container=False,show_download_button=False)
             with gr.Row():
                 num_pth_evaluation = gr.Dropdown(choices=['1.pth', '2.pth'], label='请选择权重文件', info='请选择对应的权重文件进行测试',scale=1)
                 evaluation_question = gr.TextArea(label='测试问题结果',scale=3)
