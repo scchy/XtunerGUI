@@ -68,6 +68,11 @@ def undo(chat_history):
         chat_history.pop()
         return chat_history
 
+def evaluation_question_number_change_wrap(max_textboxes):
+    def evaluation_question_number_change(k):
+        k = int(k)
+        return [gr.Textbox(visible=True)]*k + [gr.Textbox(visible=False)]*(max_textboxes-k)
+    return evaluation_question_number_change
 
 with gr.Blocks() as demo:
     gr.Markdown(value='''  
@@ -198,8 +203,31 @@ with gr.Blocks() as demo:
             with gr.Accordion(label="测试问题模版", open=False):
                 evaluation_freq = gr.Number(label='验证对话效果频率(evaluation_freq)', value=100, info='请确定模型每多少轮需要验证一次对话效果')
                 evaluation_system_prompt = gr.Textbox(label = '系统提示词', value='', info='请设置在评估模式下的System Prompt')
-                evaluation_input1 = gr.Textbox(label= '测试问题1',value='请给我介绍五个上海的景点', info='请输入第一个评估的问题')
-                evaluation_input2 = gr.Textbox(label='测试问题2',value='Please tell me five scenic spots in Shanghai', info='请输入第二个评估问题')
+                default_evaluation_question_number = 2
+                max_evaluation_question_number = 10
+                default_evaluation_question_list = [
+                    '请给我介绍五个上海的景点',
+                    'Please tell me five scenic spots in Shanghai'
+                ]
+                evaluation_question_list = []
+                evaluation_question_number = gr.Number(label='评估问题数', value=default_evaluation_question_number, minimum=1, maximum=max_evaluation_question_number, info='调整评估问题的数量（最多10个问题）')
+                for i in range(max_evaluation_question_number):
+                    evaluation_question_if_visible = True if i < default_evaluation_question_number else False
+                    evaluation_question_value = default_evaluation_question_list[i] if i < default_evaluation_question_number else ''
+                    if i == 0:
+                        evaluation_input1 = gr.Textbox(label=f'评估问题{i + 1}', value=evaluation_question_value, interactive=True, placeholder=f"请输入第{i + 1}个评估的问题", visible=evaluation_question_if_visible)
+                        evaluation_question_list.append(evaluation_input1)
+                        continue
+                    elif i == 1:
+                        evaluation_input2 = gr.Textbox(label=f'评估问题{i + 1}', value=evaluation_question_value, interactive=True, placeholder=f"请输入第{i + 1}个评估的问题", visible=evaluation_question_if_visible)
+                        evaluation_question_list.append(evaluation_input2)
+                        continue
+                    else:
+                        t = gr.Textbox(label=f'评估问题{i + 1}', value=evaluation_question_value, interactive=True, placeholder=f"请输入第{i + 1}个评估的问题", visible=evaluation_question_if_visible)
+                        evaluation_question_list.append(t)
+                evaluation_question_number.change(evaluation_question_number_change_wrap(max_evaluation_question_number), evaluation_question_number, evaluation_question_list)
+                # evaluation_input1 = gr.Textbox(label='测试问题1', value='请给我介绍五个上海的景点', info='请输入第一个评估的问题')
+                # evaluation_input2 = gr.Textbox(label='测试问题2', value='Please tell me five scenic spots in Shanghai', info='请输入第二个评估问题')
         with gr.Tab('进阶参数'):
             with gr.Row():
                 optim_type = gr.Dropdown(choices=['AdamW'], value='AdamW', label='优化器', info='请选择合适的优化器（默认为AdamW）',visible=False)
