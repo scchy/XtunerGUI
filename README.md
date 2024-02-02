@@ -50,38 +50,49 @@ todo:
 customer_path  
 |-- download_cache
 |   |-- data_download
+|   |   `-- tatsu-lab_alpaca
 |   `-- model_download
+|       `-- internlm_internlm-chat-7b
 `-- work_dir
-    |-- 20240131_145313
-    |-- 20240131_152320
-    |-- __xtuner_tr.log
-    |-- iter_250.pth
-    |-- iter_300.pth
+    |-- 20240202_153301
+    |   |-- 20240202_153301.log
+    |   `-- vis_data
+    |-- iter_100.pth
+    |-- iter_50.pth
     |-- last_checkpoint
     |-- xtuner_config.py
-    |-- xtuner_hf
-    |-- xtuner_merge
-    `-- zero_to_fp32.py
+    `-- xtuner_iter_100_hf
+        |-- README.md
+        |-- adapter_config.json
+        |-- adapter_model.safetensors
+        `-- xtuner_config.py
 
 ```
 
 
 ## Test
 - [X] customer-root /root/sccTest3
-- [X] customer-data /root/sccTest3/download_cache
+- [X] customer-data-dir /root/sccTest3/download_cache
 - [X] customer model: /root/share/model_repos/internlm-chat-7b
   - [X] check customer model template detect
   - [X] -> detect_prompt_template -> prompt_template_show
+- [X] customer dataset: /root/xtunerUITest/ttt.json
+  - 
 - [X] data: tatsu-lab/alpaca -> downloading
-- config
+- [X] config
   - [X] ft_method -> DEFAULT_HYPERPARAMETERS
   - [X] generate check
 - [ ] xtuner
   - [ ] running without pregress ?
 - show result
   - [X] plot
-  - 
+  - [X] dynamic select_checkpoint -> 
 - convert
-  - /root/sccTest2/work_dir/iter_250.pth
+  - [X] choose pth
+  - [ ] convert progress
+
+
+
+
 
 

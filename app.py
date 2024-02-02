@@ -14,7 +14,7 @@ from xtuner_config.check_custom_dataset import check_custom_dataset
 from xtuner_config.get_prompt_template import app_get_prompt_template
 from xtuner_config.get_default_hyperparameters import get_default_hyperparameters
 from tqdm import tqdm
-from draw import resPlot
+from xtuner_result.draw import resPlot
 import gradio as gr
 import warnings
 warnings.filterwarnings(action='ignore')
@@ -319,13 +319,14 @@ with gr.Blocks() as demo:
                 lr_plot = gr.Plot(label='学习率变化图', container=False, show_label=False)
                 loss_graph = gr.Plot(label='损失变化图',container=False, show_label=False)
             with gr.Row():
-                num_pth_evaluation = gr.Dropdown(choices=['1.pth', '2.pth'], label='请选择权重文件', info='请选择对应的权重文件进行测试',scale=1)
+                num_pth_evaluation = gr.Dropdown(choices=['epoch_1.pth', 'epoch_1.pth'], label='请选择权重文件', info='请选择对应的权重文件进行测试',scale=1)
                 evaluation_question = gr.TextArea(label='测试问题结果',scale=3)
             show_evaluation_button = gr.Button('微调结果生成')
 
             show_evaluation_button.click(PLT.reset_work_dir, inputs=[local_path])
             show_evaluation_button.click(PLT.lr_plot, outputs=[lr_plot])
             show_evaluation_button.click(PLT.loss_plot, outputs=[loss_graph])
+            show_evaluation_button.click(PLT.dynamic_drop_down, outputs=num_pth_evaluation)
         # gr.Markdown('## 5. 实际案例')
         # ft_examples = gr.Examples(examples=[['qlora','internlm','Medqa2019'],['qlora','自定义','自定义']],inputs=[ft_method ,model ,dataset],label='例子')
 
@@ -334,14 +335,16 @@ with gr.Blocks() as demo:
         with gr.Accordion(label="模型转换",open=False):
             # Textbox
             # select_checkpoint =gr.Dropdown(choices=['epoch_1.pth', 'epoch_1.pth'], value='epoch_1.pth', label='微调模型的权重文件', info = '请选择需要进行测试的模型权重文件并进行转化')
-            select_checkpoint =gr.Dropdown(choices=['epoch_1.pth'],value='epoch_1.pth', label='微调模型的权重文件', info = '请选择需要进行测试的模型权重文件并进行转化',interactive = True)
+            select_checkpoint = gr.Dropdown(choices=['epoch_1.pth'],  label='微调模型的权重文件', info = '请选择需要进行测试的模型权重文件并进行转化',interactive = True)
+            show_evaluation_button.click(PLT.dynamic_drop_down, outputs=select_checkpoint)
+            
             covert_hf = gr.Button('模型转换',scale=1)
             covert_hf_path = gr.Textbox(label='模型转换后地址', visible=False) # False
             wrong_message6 = gr.Markdown()
 
-            # root_dir, config_file, epoch_pth, model_path)
-            covert_hf.click(convert_and_merged, inputs=[local_path, cfg_py_box, select_checkpoint, model_path], outputs=[covert_hf_path]) 
-        with gr.Accordion(label='对话测试', open=True):
+            # root_dir, config_file, epoch_pth, model_path, customer_model_path)
+            covert_hf.click(convert_and_merged, inputs=[local_path, cfg_py_box, select_checkpoint, model_path, model_personal_path], outputs=[wrong_message6, covert_hf_path]) 
+        with gr.Accordion(label='对话测试', open=False):
             with gr.Row():
                 with gr.Accordion(label="原模型对话测试", open=True):
                     with gr.Column():

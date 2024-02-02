@@ -3,28 +3,43 @@ from datasets import load_dataset
 import altair as alt
 import pandas as pd
 import os
+import re
+import gradio as gr
 
 
 class resPlot:
     def __init__(self, work_dir):
         self.work_dir = work_dir
         self.log_file = None
+        self.iter_dir_list = []
         self.get_log_path()
+        self.find_iter_pth()
         print(f"resPlot(self.log_file={self.log_file})")
 
     def get_log_path(self):
         try:
-            list_ =  sorted([i for i in os.listdir(self.work_dir) if '.' not in i])
-            dir_name = list_[-2] if  'last_' in list_[-1] else list_[-1]
+            list_ =  sorted([i for i in os.listdir(self.work_dir) if '.' not in i and re.match(r'\d+_\d+', i)])
+            dir_name = list_[-1]
             self.log_file = os.path.join(self.work_dir, dir_name, 'vis_data' , f'{dir_name}.json')
         except Exception as e:
             print(e)
             pass
+    
+    def find_iter_pth(self):
+        try:
+            self.iter_dir_list = sorted([i for i in os.listdir(self.work_dir) if '.pth' in i])
+        except Exception as e:
+            print(e)
+            pass
+    
+    def dynamic_drop_down(self):
+        return gr.Dropdown(choices=self.iter_dir_list, interactive=True)
 
     def reset_work_dir(self, root_dir):
         self.work_dir = f'{root_dir}/work_dir'
         self.get_log_path()
-        print(f"reset_work_dir -> self.work_dir={self.work_dir} self.log_file={self.log_file}")
+        self.find_iter_pth()
+        print(f"resPlot -> self.work_dir={self.work_dir}\nself.log_file={self.log_file}\nself.iter_dir_list={self.iter_dir_list}")
 
     def lr_plot(self):
         y_axis_name = 'lr'
