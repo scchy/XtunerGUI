@@ -13,12 +13,14 @@ from xtuner_config.build_config import build_and_save_config
 from xtuner_config.check_custom_dataset import check_custom_dataset
 from xtuner_config.get_prompt_template import app_get_prompt_template
 from xtuner_config.get_default_hyperparameters import get_default_hyperparameters
+from chat.model_center import ModelCenter
 from tqdm import tqdm
 from xtuner_result.draw import resPlot
 import gradio as gr
 import warnings
 warnings.filterwarnings(action='ignore')
-
+CHAT_ORG = ModelCenter()
+FT_CHAT_ORG = ModelCenter()
 
 def combine_message_and_history(message, chat_history):
     # 将聊天历史中的每个元素（假设是元组）转换为字符串
@@ -64,9 +66,6 @@ def regenerate(chat_history):
     # 返回更新后的聊天记录
     return msg, chat_history
 
-def undo(chat_history):
-        chat_history.pop()
-        return chat_history
 
 
 with gr.Blocks() as demo:
@@ -330,7 +329,6 @@ with gr.Blocks() as demo:
             show_evaluation_button.click(PLT.reset_work_dir, inputs=[local_path], queue=False)
             show_evaluation_button.click(PLT.lr_plot, outputs=[lr_plot], queue=False)
             show_evaluation_button.click(PLT.loss_plot, outputs=[loss_graph], queue=False)
-            # todo: check  evaluation_question
             show_evaluation_button.click(PLT.dynamic_drop_down, outputs=num_pth_evaluation, queue=False)
             # 找到 & read eval 
             num_pth_evaluation.change(PLT.get_eval_test, inputs=[num_pth_evaluation], outputs=[evaluation_question])
@@ -358,41 +356,54 @@ with gr.Blocks() as demo:
                         with gr.Accordion(label='参数设置',open=False):
                             max_new_tokens = gr.Slider(minimum=0, maximum=4096 ,value=1024, label='模型输出的最长Toekn', info='Token越多，模型能够回复的长度就越长')
                             bits =  gr.Radio(choices=['int4', 'int8', 'None'],value='None', label='量化', info='请选择模型量化程度', interactive=True)
-                            
-                            temperature = gr.Slider(maximum=1,minimum=0,label='温度值',info='温度值越高，模型输出越随机')
+                            temperature = gr.Slider(maximum=1,minimum=0.9,label='温度值',info='温度值越高，模型输出越随机')
                             top_k=gr.Slider(minimum=0, maximum=100, value=40, label='top-k',info='')
                             top_p = gr.Slider(minimum=0, maximum=2, value=0.75, label='top-p',info='')
                             
                             #还可以添加更多
                             wrong_message9 = gr.Markdown()
                         start_testing_model = gr.Button('模型启动')
+                        testig_model_loaded = gr.Markdown()
                         chatbot = gr.Chatbot(label='微调模型测试')
                         msg = gr.Textbox(label="输入信息")
-                        msg.submit(respond, inputs=[msg, chatbot], outputs=[msg, chatbot])
+                        # msg.submit(respond, inputs=[msg, chatbot], outputs=[msg, chatbot])
+                        # 模型载入
+                        start_testing_model.click(CHAT_ORG.load_model, inputs=[model_personal_path, personal_model, model_path], outputs=[testig_model_loaded])
                     with gr.Row():
-                        clear = gr.Button('记录删除').click(clear_history, inputs=[chatbot], outputs=[chatbot])
-                        undo = gr.Button('撤回上一条').click(undo, inputs=[chatbot], outputs=[chatbot])
-                        regenerate = gr.Button('重新生成').click(regenerate, inputs=[chatbot], outputs = [msg, chatbot]) 
+                        clear = gr.Button('记录删除') # .click(clear_history, inputs=[chatbot], outputs=[chatbot])
+                        undo = gr.Button('撤回上一条') # .click(undo, inputs=[chatbot], outputs=[chatbot])
+                        regenerate = gr.Button('重新生成') # .click(regenerate, inputs=[chatbot], outputs = [msg, chatbot]) 
+                        
+                        clear.click(CHAT_ORG.qa_clear, inputs=[chatbot], outputs=[chatbot])
+                        undo.click(CHAT_ORG.qa_undo, inputs=[chatbot], outputs=[chatbot])
+                        regenerate.click(CHAT_ORG.qa_answer, inputs=[msg, max_new_tokens, temperature, top_k, top_p, chatbot], outputs=[msg, chatbot])
+                        
                 with gr.Accordion(label="微调模型对话测试", open=True):
                     with gr.Column():
                         with gr.Accordion(label='参数设置',open=False):
-                            max_new_tokens = gr.Slider(minimum=0, maximum=4096 ,value=1024, label='模型输出的最长Toekn', info='Token越多，模型能够回复的长度就越长')
-                            bits =  gr.Radio(choices=['int4', 'int8', 'None'],value='None', label='量化', info='请选择模型量化程度', interactive=True)
+                            ft_max_new_tokens = gr.Slider(minimum=0, maximum=4096 ,value=1024, label='模型输出的最长Toekn', info='Token越多，模型能够回复的长度就越长')
+                            ft_bits =  gr.Radio(choices=['int4', 'int8', 'None'],value='None', label='量化', info='请选择模型量化程度', interactive=True)
                             
-                            temperature = gr.Slider(maximum=1,minimum=0,label='温度值',info='温度值越高，模型输出越随机')
-                            top_k=gr.Slider(minimum=0, maximum=100, value=40, label='top-k',info='')
-                            top_p = gr.Slider(minimum=0, maximum=2, value=0.75, label='top-p',info='')
+                            ft_temperature = gr.Slider(maximum=1,minimum=0.9,label='温度值',info='温度值越高，模型输出越随机')
+                            ft_top_k=gr.Slider(minimum=0, maximum=100, value=40, label='top-k',info='')
+                            ft_top_p = gr.Slider(minimum=0, maximum=2, value=0.75, label='top-p',info='')
                             
                             #还可以添加更多
-                            wrong_message9 = gr.Markdown()
-                        start_testing_model = gr.Button('模型启动')
-                        chatbot = gr.Chatbot(label='微调模型测试')
-                        msg = gr.Textbox(label="输入信息")
-                        msg.submit(respond, inputs=[msg, chatbot], outputs=[msg, chatbot])
+                            ft_wrong_message9 = gr.Markdown()
+                        ft_start_testing_model = gr.Button('模型启动')
+                        ft_testig_model_loaded = gr.Markdown()
+                        ft_chatbot = gr.Chatbot(label='微调模型测试')
+                        ft_msg = gr.Textbox(label="输入信息")
+                        # 模型载入
+                        ft_start_testing_model.click(FT_CHAT_ORG.load_model, inputs=[covert_hf_path, personal_model, model_path], outputs=[ft_testig_model_loaded])
                     with gr.Row():
-                        clear = gr.Button('记录删除').click(clear_history, inputs=[chatbot], outputs=[chatbot])
-                        undo = gr.Button('撤回上一条').click(undo, inputs=[chatbot], outputs=[chatbot])
-                        regenerate = gr.Button('重新生成').click(regenerate, inputs=[chatbot], outputs = [msg, chatbot])  
+                        ft_clear = gr.Button('记录删除')
+                        ft_undo = gr.Button('撤回上一条')
+                        ft_regenerate = gr.Button('重新生成')
+                        
+                        ft_clear.click(FT_CHAT_ORG.qa_clear, inputs=[ft_chatbot], outputs=[ft_chatbot])
+                        ft_undo.click(FT_CHAT_ORG.qa_undo, inputs=[ft_chatbot], outputs=[ft_chatbot])
+                        ft_regenerate.click(FT_CHAT_ORG.qa_answer, inputs=[ft_msg, ft_max_new_tokens, ft_temperature, ft_top_k, ft_top_p, ft_chatbot], outputs=[ft_msg, ft_chatbot])
         # with gr.Accordion(label='模型基础能力评估测试',open=False):
         #     mmlu_test_button = gr.Button('MMLU模型能力评估测试')
         with gr.Accordion(label="其他信息", open=True):
