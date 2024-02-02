@@ -35,6 +35,4 @@ def get_template_format_by_name(template_name):
     template = PROMPT_TEMPLATE.get(template_name, None)
     if template is None:
         return "Template not found"
-    else:
-        for key, value in template.items():
-            return f"{key}: {value}"
+    return str(template)

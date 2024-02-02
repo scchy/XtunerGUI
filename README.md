@@ -67,11 +67,21 @@ customer_path
 
 
 ## Test
-- /root/sccTest2
-- model: /root/share/model_repos/internlm-chat-7b
-- data: tatsu-lab/alpaca -> downloading
+- [X] customer-root /root/sccTest3
+- [X] customer-data /root/sccTest3/download_cache
+- [X] customer model: /root/share/model_repos/internlm-chat-7b
+  - [X] check customer model template detect
+  - [X] -> detect_prompt_template -> prompt_template_show
+- [X] data: tatsu-lab/alpaca -> downloading
 - config
-- xtuner
+  - [X] ft_method -> DEFAULT_HYPERPARAMETERS
+  - [X] generate check
+- [ ] xtuner
+  - [ ] running without pregress ?
+- show result
+  - [X] plot
+  - 
 - convert
   - /root/sccTest2/work_dir/iter_250.pth
+
 

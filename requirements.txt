@@ -9,3 +9,4 @@ markdown==3.3.7
 xtuner
 xformers
 flash_attn
+altair

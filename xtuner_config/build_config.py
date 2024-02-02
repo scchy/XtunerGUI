@@ -293,7 +293,7 @@ def build_config_path(root_dir):
 def build_and_save_config(
     dataset_personal_path, 
     model_personal_path,
-    customer,
+    detect_prompt_template,
     root_dir, 
     *args, **kwargs
 ):
@@ -316,8 +316,7 @@ def build_and_save_config(
     prompt_template = mdoel_path_map_fn(kwargs['model_path'])
     if model_personal_path is not None and len(model_personal_path) >= 3:
         kwargs['model_path'] = model_personal_path
-        # custom model just 
-        check_status, prompt_template = get_prompt_template(kwargs['model_path'])
+        prompt_template = detect_prompt_template
 
     # final prompt_template
     kwargs['prompt_template'] = prompt_template

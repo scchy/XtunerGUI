@@ -8,9 +8,9 @@ def dir_create(_dir):
         os.system(f'mkdir -p {_dir}')
     return _dir
 
-
-MODEL_DOWNLOAD_DIR = dir_create(f"{CUR_PATH}/download_cache/model_download")
-DATA_DOWNLOAD_DIR = dir_create(f"{CUR_PATH}/download_cache/data_download")
+DEFAULT_DOWNLOAD_DIR = dir_create(f"{CUR_PATH}/download_cache")
+MODEL_DOWNLOAD_DIR = dir_create(f"{DEFAULT_DOWNLOAD_DIR}/model_download")
+DATA_DOWNLOAD_DIR = dir_create(f"{DEFAULT_DOWNLOAD_DIR}/data_download")
 WORK_DIR = dir_create(f"{CUR_PATH}/work_dir")
 
 

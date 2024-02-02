@@ -1,5 +1,54 @@
 import matplotlib.pyplot as plt
 from datasets import load_dataset
+import altair as alt
+import pandas as pd
+import os
+
+
+class resPlot:
+    def __init__(self, work_dir):
+        self.work_dir = work_dir
+        self.log_file = None
+        self.get_log_path()
+        print(f"resPlot(self.log_file={self.log_file})")
+
+    def get_log_path(self):
+        try:
+            list_ =  sorted([i for i in os.listdir(self.work_dir) if '.' not in i])
+            dir_name = list_[-2] if  'last_' in list_[-1] else list_[-1]
+            self.log_file = os.path.join(self.work_dir, dir_name, 'vis_data' , f'{dir_name}.json')
+        except Exception as e:
+            print(e)
+            pass
+
+    def reset_work_dir(self, root_dir):
+        self.work_dir = f'{root_dir}/work_dir'
+        self.get_log_path()
+        print(f"reset_work_dir -> self.work_dir={self.work_dir} self.log_file={self.log_file}")
+
+    def lr_plot(self):
+        y_axis_name = 'lr'
+        return self.make_plot(y_axis_name, self.log_file)
+
+    def loss_plot(self):
+        y_axis_name = 'loss'
+        return self.make_plot(y_axis_name, self.log_file)
+    
+    @staticmethod
+    def make_plot(y_axis_name, log_path):
+        ds = load_dataset('json', data_files=log_path)
+        ds = ds['train'].to_pandas()
+        ds = ds.rename(columns={'iter': 'iter_num'})
+        print(ds.dtypes) 
+        # ['lr', 'data_time', 'loss', 'time', 'grad_norm', 'iter', 'memory', 'step']
+        source = pd.DataFrame({
+            'iter_num': ds['iter_num'].map(int).tolist(),
+            y_axis_name: ds[y_axis_name].map(float).tolist(),
+        })
+        base = alt.Chart(source).mark_line(
+            point=alt.OverlayMarkDef(filled=False, fill="white")
+            ).encode(x='iter_num',y=y_axis_name) 
+        return base
 
 
 def draw(y_axis_name, log_path, save_path):
@@ -21,4 +70,6 @@ def draw(y_axis_name, log_path, save_path):
 
     plt.savefig(save_path)
 
-draw('loss', './dummy_log.json', 'd1.png')
+
+if __name__ == '__main__':
+    draw('loss', './dummy_log.json', 'd1.png')
