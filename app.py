@@ -306,7 +306,10 @@ with gr.Blocks() as demo:
         PLT = resPlot(
             work_dir = f'{local_path.value}/work_dir',
         )
+        # 点击停止训练的时候 retry_path_dropdown 进行更新
+        stop_button.click(PLT.dynamic_drop_down, outputs=retry_path_dropdown)
         local_path_button.click(PLT.reset_work_dir, inputs=[local_path])
+        work_path.change(PLT.reset_work_dir, inputs=[local_path])
         with gr.Tab('训练结果'):
             with gr.Row():
                 ft_model_save_path = gr.Textbox(label='模型保存路径',visible=False)
@@ -323,7 +326,6 @@ with gr.Blocks() as demo:
                 evaluation_question = gr.TextArea(label='测试问题结果',scale=3)
             show_evaluation_button = gr.Button('微调结果生成')
 
-            show_evaluation_button.click(PLT.reset_work_dir, inputs=[local_path])
             show_evaluation_button.click(PLT.lr_plot, outputs=[lr_plot])
             show_evaluation_button.click(PLT.loss_plot, outputs=[loss_graph])
             show_evaluation_button.click(PLT.dynamic_drop_down, outputs=num_pth_evaluation)

@@ -28,9 +28,9 @@ class quickTrain:
         self.remove_log_file()
         print(f'config_py_path={config_py_path}')
     
-    def reset_resume_from_checkpoint(self, work_dir):
-        print(f"reset_resume_from_checkpoint({work_dir})")
-        self.resume_from_checkpoint = work_dir
+    def reset_resume_from_checkpoint(self, ckpt):
+        self.resume_from_checkpoint = f'{self.work_dir}/{ckpt}'
+        print(f"reset_resume_from_checkpoint({self.resume_from_checkpoint})")
     
     def reset_deepspeed(self, deepspeed):
         print(f"reset_deepspeed({deepspeed})")
