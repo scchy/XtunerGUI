@@ -33,10 +33,15 @@ class resPlot:
             pass
     
     def get_eval_test(self, ep_pth):
-        ep = ep_pth.split('.')[0]
+        ep_str = ep_pth.split('.')[0]
+        ep = ep_str.split('_')[0] + '_' + str(int(ep_str.split('_')[1]) - 1)
         list_ =  sorted([i for i in os.listdir(self.work_dir) if '.' not in i and re.match(r'\d+_\d+', i)])
         dir_name = list_[-1]
-        self.log_file = os.path.join(self.work_dir, dir_name, 'vis_data' , f'{ep}.text')
+        eval_file = os.path.join(self.work_dir, dir_name, 'vis_data' , f'eval_outputs_{ep}.txt')
+        try:
+            return open(eval_file, 'r').read()
+        except Exception as e:
+            return f'eval_file={eval_file}\nERROR: {e} '
     
     def dynamic_drop_down(self):
         return gr.Dropdown(choices=self.iter_dir_list, interactive=True)

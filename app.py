@@ -324,6 +324,8 @@ with gr.Blocks() as demo:
             with gr.Row():
                 num_pth_evaluation = gr.Dropdown(choices=['epoch_1.pth', 'epoch_1.pth'], label='请选择权重文件', info='请选择对应的权重文件进行测试',scale=1)
                 evaluation_question = gr.TextArea(label='测试问题结果',scale=3)
+                
+            stop_button.click(PLT.dynamic_drop_down, outputs=num_pth_evaluation)
             show_evaluation_button = gr.Button('微调结果生成')
             show_evaluation_button.click(PLT.reset_work_dir, inputs=[local_path], queue=True)
             show_evaluation_button.click(PLT.lr_plot, outputs=[lr_plot], queue=True)
@@ -331,7 +333,7 @@ with gr.Blocks() as demo:
             # todo: check  evaluation_question
             show_evaluation_button.click(PLT.dynamic_drop_down, outputs=num_pth_evaluation, queue=True)
             # 找到 & read eval 
-            # num_pth_evaluation.change(PLT.get_eval_test, outputs=[evaluation_question])
+            num_pth_evaluation.change(PLT.get_eval_test, inputs=[num_pth_evaluation], outputs=[evaluation_question])
 
         gr.Markdown("## 6. 微调模型转化及测试")
         
@@ -339,6 +341,7 @@ with gr.Blocks() as demo:
             # Textbox
             # select_checkpoint =gr.Dropdown(choices=['epoch_1.pth', 'epoch_1.pth'], value='epoch_1.pth', label='微调模型的权重文件', info = '请选择需要进行测试的模型权重文件并进行转化')
             select_checkpoint = gr.Dropdown(choices=['epoch_1.pth'],  label='微调模型的权重文件', info = '请选择需要进行测试的模型权重文件并进行转化',interactive = True)
+            stop_button.click(PLT.dynamic_drop_down, outputs=select_checkpoint)
             show_evaluation_button.click(PLT.dynamic_drop_down, outputs=select_checkpoint, queue=True)
             
             covert_hf = gr.Button('模型转换',scale=1)

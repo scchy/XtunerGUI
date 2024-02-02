@@ -126,5 +126,5 @@ class quickTrain:
             self._t_handle_tr = None
      
         self._break_flag = True
-        return f"Done! Xtuner had interrupted!\nwork_dir={self.work_dir}"
+        return f"Done! Xtuner had interrupted!\nwork_dir={self.work_dir}", self.work_dir
 
