@@ -54,18 +54,17 @@ class resPlot:
 
     def lr_plot(self):
         y_axis_name = 'lr'
-        return self.make_plot(y_axis_name, self.log_file)
+        return self.gr_line_plot(y_axis_name, self.log_file)
 
     def loss_plot(self):
         y_axis_name = 'loss'
-        return self.make_plot(y_axis_name, self.log_file)
+        return self.gr_line_plot(y_axis_name, self.log_file)
     
     @staticmethod
     def make_plot(y_axis_name, log_path):
         ds = load_dataset('json', data_files=log_path)
         ds = ds['train'].to_pandas()
         ds = ds.rename(columns={'iter': 'iter_num'})
-        print(ds.dtypes) 
         # ['lr', 'data_time', 'loss', 'time', 'grad_norm', 'iter', 'memory', 'step']
         source = pd.DataFrame({
             'iter_num': ds['iter_num'].map(int).tolist(),
@@ -75,7 +74,28 @@ class resPlot:
             point=alt.OverlayMarkDef(filled=False, fill="white")
             ).encode(x='iter_num',y=y_axis_name) 
         return base
-
+    
+    @staticmethod
+    def gr_line_plot(y_axis_name, log_path):
+        ds = load_dataset('json', data_files=log_path)
+        ds = ds['train'].to_pandas()
+        ds = ds.rename(columns={'iter': 'iter_num'})
+        source = pd.DataFrame({
+            'iter_num': ds['iter_num'].map(int).tolist(),
+            y_axis_name: ds[y_axis_name].map(float).tolist(),
+        })
+        return gr.LinePlot(
+            source,
+            x="iter_num",
+            x_title='iter_num',
+            y=y_axis_name,
+            y_title=y_axis_name,
+            overlay_point=True,
+            tooltip=["iter_num", y_axis_name],
+            title=y_axis_name,
+            height=300,
+            width=500,
+        )
 
 def draw(y_axis_name, log_path, save_path):
     """

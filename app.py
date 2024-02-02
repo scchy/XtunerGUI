@@ -319,19 +319,19 @@ with gr.Blocks() as demo:
             with gr.Row():                
                 # lr_plot = gr.Image(label='学习率变化图',container=False,show_download_button=False,interactive=False)
                 # loss_graph = gr.Image(label='损失变化图',container=False,show_download_button=False)
-                lr_plot = gr.Plot(label='学习率变化图', container=False, show_label=False)
-                loss_graph = gr.Plot(label='损失变化图',container=False, show_label=False)
+                lr_plot = gr.LinePlot(label='学习率变化图')
+                loss_graph = gr.LinePlot(label='损失变化图')
             with gr.Row():
                 num_pth_evaluation = gr.Dropdown(choices=['epoch_1.pth', 'epoch_1.pth'], label='请选择权重文件', info='请选择对应的权重文件进行测试',scale=1)
                 evaluation_question = gr.TextArea(label='测试问题结果',scale=3)
                 
             stop_button.click(PLT.dynamic_drop_down, outputs=num_pth_evaluation)
             show_evaluation_button = gr.Button('微调结果生成')
-            show_evaluation_button.click(PLT.reset_work_dir, inputs=[local_path], queue=True)
-            show_evaluation_button.click(PLT.lr_plot, outputs=[lr_plot], queue=True)
-            show_evaluation_button.click(PLT.loss_plot, outputs=[loss_graph], queue=True)
+            show_evaluation_button.click(PLT.reset_work_dir, inputs=[local_path], queue=False)
+            show_evaluation_button.click(PLT.lr_plot, outputs=[lr_plot], queue=False)
+            show_evaluation_button.click(PLT.loss_plot, outputs=[loss_graph], queue=False)
             # todo: check  evaluation_question
-            show_evaluation_button.click(PLT.dynamic_drop_down, outputs=num_pth_evaluation, queue=True)
+            show_evaluation_button.click(PLT.dynamic_drop_down, outputs=num_pth_evaluation, queue=False)
             # 找到 & read eval 
             num_pth_evaluation.change(PLT.get_eval_test, inputs=[num_pth_evaluation], outputs=[evaluation_question])
 
@@ -342,7 +342,7 @@ with gr.Blocks() as demo:
             # select_checkpoint =gr.Dropdown(choices=['epoch_1.pth', 'epoch_1.pth'], value='epoch_1.pth', label='微调模型的权重文件', info = '请选择需要进行测试的模型权重文件并进行转化')
             select_checkpoint = gr.Dropdown(choices=['epoch_1.pth'],  label='微调模型的权重文件', info = '请选择需要进行测试的模型权重文件并进行转化',interactive = True)
             stop_button.click(PLT.dynamic_drop_down, outputs=select_checkpoint)
-            show_evaluation_button.click(PLT.dynamic_drop_down, outputs=select_checkpoint, queue=True)
+            show_evaluation_button.click(PLT.dynamic_drop_down, outputs=select_checkpoint, queue=False)
             
             covert_hf = gr.Button('模型转换',scale=1)
             covert_hf_path = gr.Textbox(label='模型转换后地址', visible=False) # False
