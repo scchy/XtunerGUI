@@ -8,7 +8,11 @@ from xtuner_convert.convert_and_merge import convert_and_merged
 from xtuner_run.shell_train import quickTrain
 from appPrepare.files_prepare import DATA_DOWNLOAD_DIR, MODEL_DOWNLOAD_DIR, CUR_PATH, WORK_DIR
 from appPrepare.list_prepare import DATA_LIST, MODEL_LIST, PROMPT_TEMPLATE_LIST
-from build_config import build_and_save_config
+from appPrepare.func_prepare import read_first_ten_lines, get_template_format_by_name, OPENAI_FORMAT
+from xtuner_config.build_config import build_and_save_config
+from xtuner_config.check_custom_dataset import check_custom_dataset
+from xtuner_config.get_prompt_template import get_prompt_template
+from xtuner_config.get_default_hyperparameters import get_default_hyperparameters
 from tqdm import tqdm
 import gradio as gr
 import warnings
@@ -76,7 +80,7 @@ with gr.Blocks() as demo:
     with gr.Tab("基础训练"):
         with gr.Accordion(label='使用指南', open=False):
             gr.Markdown('## 流程图')
-            process = gr.Image(value='/root/XtunerGUI/pictures/workflow.jpg',label='使用流程图',container=False,show_download_button=False )
+            # process = gr.Image(value='/root/XtunerGUI/pictures/workflow.jpg',label='使用流程图',container=False,show_download_button=False )
             gr.Markdown('## 演示视频')
             # video_customer_introduction = gr.Video(label='Xtuner GUI用法演示',value='/mnt/d/xtuner/demo.mp4',interactive=False)
         gr.Markdown("## 1. 本地路径设置")
@@ -92,7 +96,7 @@ with gr.Blocks() as demo:
         gr.Markdown("## 2. 微调方法、模型、数据集设置")
         
         with gr.Row():
-            ft_method = gr.Dropdown(choices=['qlora', 'lora', 'full'], value='qlora',label = '微调方法', info='''请选择微调的方法''',interactive=True)
+            ft_method = gr.Dropdown(choices=['qlora', 'lora', 'full'], value='qlora',label = '微调方法', info='''请选择微调的方法''',interactive=True)            
             with gr.Column():
                 model = gr.Dropdown(choices=MODEL_LIST + ['自定义'], value='internlm/internlm-chat-7b',label = '模型', info='请选择配置文件对应的模型',interactive=True)
                 DM_CLS = xtunerModelDownload(
@@ -132,29 +136,43 @@ with gr.Blocks() as demo:
         wrong_message1 = gr.Markdown()
         with gr.Row():
             with gr.Accordion(label="自定义模型",open=False):
-                personal_model_path = gr.Textbox(label='自定义模型本地路径', info = '请输入模型的本地路径在下方，或将文件压缩上传到下方的位置（建议直接填写本地路径）')
+                model_personal_path = gr.Textbox(label='自定义模型本地路径', info = '请输入模型的本地路径在下方，或将文件压缩上传到下方的位置（建议直接填写本地路径）')
                 personal_model = gr.Files(label='请上传自定义模型文件')
-                check_personal_model = gr.Button('检查模型是否符合要求(请务必点击！)')
+                check_personal_model = gr.Button('模型检查及提示词模板自动匹配（请务必点击！）')
                 wrong_message2 = gr.Markdown() #可用于承接检查后得到的结果
+                
+                check_personal_model.click(get_prompt_template, inputs=[model_personal_path], outputs=[wrong_message2])
+                
             with gr.Accordion(label="自定义数据集（仅支持OpenAI格式）",open=False):
                 with gr.Row():
                     with gr.Column():
                         dataset_type = gr.Dropdown(choices=['OpenAI'],value='OpenAI',label = '支持的数据集格式', interactive=False)
-                        dataset_type_preview = gr.TextArea(label='OpenAI数据集格式展示', info= '该数据集的标准格式如下所示，请将自定义的数据集格式转化为该格式。')
+                        dataset_type_preview = gr.TextArea(label='OpenAI数据集格式展示', info= '该数据集的标准格式如下所示，请将自定义的数据集格式转化为该格式。',value=OPENAI_FORMAT)
                         #dataset_type_preview = gr.JSON(label='数据集格式展示')
                     with gr.Column():
                         dataset_personal_path = gr.Textbox(label = '数据集本地路径', info='请填入本地数据集路径或直接在下方上传数据文件')
-                        dataset_personal = gr.Files(label='请上传自定义的数据集或在上方填入本地路径')
+                        dataset_personal_path_button = gr.Button('请点击上传数据集本地路径')
+                        dataset_personal = gr.Files(label='请上传自定义的数据集或在上方填入本地路径',type='filepath')
                 check_personal_dataset = gr.Button('检查数据集是否符合要求')
                 wrong_message3 = gr.Markdown() #判定数据集格式是否符合要求，符合就在上面显示
+                check_personal_dataset.click(check_custom_dataset, inputs=[dataset_personal_path, dataset_personal], outputs=wrong_message3)
+                
                 with gr.Accordion(label="数据集预览",open=False):
                     dataset_preview = gr.TextArea(label='数据集展示', info = '截取前n行内容，可用于对比原数据集格式。')
                     #dataset_preview = gr.JSON(label='数据集展示')
+
+                dataset_personal_path_button.click(fn=read_first_ten_lines, inputs=dataset_personal_path, outputs=dataset_preview)
+                dataset_personal.change(fn=read_first_ten_lines, inputs=dataset_personal_path, outputs=dataset_preview)
+                
         with gr.Accordion(label="对应提示词模版展示",open=False):
             with gr.Row():
                 # todo map function 
-                prompt_template = gr.Dropdown(PROMPT_TEMPLATE_LIST, label='提示词模版', value='internlm_chat', info='请选择合适的提示词模版')
+                prompt_template = gr.Dropdown(PROMPT_TEMPLATE_LIST, label='提示词模版', info='请选择合适的提示词模版',interactive=True)
                 prompt_template_show = gr.TextArea(label='提示词模版展示')
+                
+                prompt_template.change(fn=get_template_format_by_name, inputs=prompt_template, outputs=prompt_template_show)
+                # model.change(fn=get_template_name_by_model, inputs=model, outputs=prompt_template)
+
         gr.Markdown("## 3. 微调参数设置")
         with gr.Accordion(label="参数调整指南",open=False):
             gr.Markdown('#### 参数调整方式为...')
@@ -187,13 +205,35 @@ with gr.Blocks() as demo:
             with gr.Accordion(label="AdamW优化器betas", open=False):
                 beta1 = gr.Number(label='beta1', value=0.9, info='这个值通常用于计算梯度的一阶矩估计（即梯度的指数移动平均）。较高的 beta1 值意味着过去梯度的权重更大，从而使得优化器更加关注历史梯度信息。')
                 beta2 = gr.Number(label='beta2', value=0.999, info= ' 这个值用于计算梯度的二阶矩估计（即梯度的平方的指数移动平均）。较高的 beta2 值使优化器能够在更长的时间跨度内平滑方差的影响。')
-            
+
+        ft_method.change(
+            get_default_hyperparameters, inputs=[ft_method],
+            outputs=[
+                warmup_ratio,
+                batch_size_per_device,
+                accumulative_counts,
+                num_GPU,
+                max_length,
+                pack_to_max_length,
+                evaluation_freq,
+                optim_type,
+                weight_decay,
+                max_norm,
+                dataloader_num_workers,
+                beta1,
+                beta2,
+                lr,
+                save_checkpoint_interval,
+                save_total_limit
+            ]
+        )
         change_config_button = gr.Button('点击生成配置文件')
         cfg_py_box = gr.Markdown(value="还未生成配置文件")
         change_config_button.click(
             build_and_save_config, 
             inputs=[
                 dataset_personal_path,
+                model_personal_path,
                 local_path,
                 ft_method,
                 model_path,
@@ -265,8 +305,8 @@ with gr.Blocks() as demo:
                 num_pth = gr.Number(label='权重文件数量',scale=1)
             with gr.Row():
                 
-                lr_plot = gr.Plot(label='学习率变化图')
-                loss_graph = gr.Plot(label='损失变化图')
+                lr_plot = gr.Image(label='学习率变化图',container=False,show_download_button=False,interactive=False)
+                loss_graph = gr.Image(label='损失变化图',container=False,show_download_button=False)
             with gr.Row():
                 num_pth_evaluation = gr.Dropdown(choices=['1.pth', '2.pth'], label='请选择权重文件', info='请选择对应的权重文件进行测试',scale=1)
                 evaluation_question = gr.TextArea(label='测试问题结果',scale=3)

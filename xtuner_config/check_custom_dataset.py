@@ -9,7 +9,8 @@ DATA_EXAMPLE = """example["messages"] = [
     { "role": "assistant", "content": "One day a student
         went to schoool." }]"""
 
-def check_custom_dataset(path):
+def check_custom_dataset(input_path, upload_path):
+    path = input_path if len(input_path) >= 3 else upload_path
     try:
         data = load_dataset('json', data_files=path)
     except:
@@ -40,8 +41,10 @@ def check_custom_dataset(path):
     
     return 'Data is OK.'
 
-out = check_custom_dataset('/mnt/petrelfs/caoweihan/projects/xtuner/data.json')
-if out is None:
-    print('Data is OK.')
-else:
-    pprint.pprint(out)
+
+if __name__ == "__main__":
+    out = check_custom_dataset('/mnt/petrelfs/caoweihan/projects/xtuner/data.json')
+    if out is None:
+        print('Data is OK.')
+    else:
+        pprint.pprint(out)

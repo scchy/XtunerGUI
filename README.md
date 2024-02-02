@@ -38,9 +38,13 @@ Xtuner Factory
 todo: 
   - [X] todo: load_dataset 下载数 
   - [ ] 测试问题 是否可以添加,  直接输入list 
-  - [ ] 自定义模型 路径校验（template）
-     1. template 映射
+  - [ ] 自定义模型 
+     1. template 映射 -> 
+     2. 路径校验（template）
   - [X] 路径最终确定
+  - [ ] prompt_template 位置改动？
+  - [ ] 自定义数据集 只支持openAI 数据集格式
+
 
 ```text
 customer_path  

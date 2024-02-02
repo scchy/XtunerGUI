@@ -47,4 +47,5 @@ def get_prompt_template(pretrained_model_name_or_path):
         return 'Fail to match automatically, please enter corresponding prompt template manually', None
     
 
-print(get_prompt_template('/mnt/petrelfs/share_data/caoweihan/official_Ampere_7B_1_0_0'))
+if __name__ == "__main__":
+    print(get_prompt_template('/mnt/petrelfs/share_data/caoweihan/official_Ampere_7B_1_0_0'))

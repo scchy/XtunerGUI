@@ -3,7 +3,54 @@ from mmengine.config.lazy import LazyObject
 from xtuner.utils import PROMPT_TEMPLATE, SYSTEM_TEMPLATE
 import torch
 import os
+from .get_prompt_template import get_prompt_template
 CUR_DIR = os.path.dirname(__file__)
+TEMPLATE_DIR = os.path.join(os.path.dirname(CUR_DIR), "template_configs")
+
+
+MODEL_TO_TEMPLATE = {
+    "baichuan-inc/Baichuan-7B": "default",
+    "baichuan-inc/Baichuan-13B-Base": "default",
+    "baichuan-inc/Baichuan-13B-Chat": "baichuan_chat",
+    "baichuan-inc/Baichuan2-7B-Base": "default",
+    "baichuan-inc/Baichuan2-7B-Chat": "baichuan2_chat",
+    "baichuan-inc/Baichuan2-13B-Base": "default",
+    "baichuan-inc/Baichuan2-13B-Chat": "baichuan2_chat",
+    "THUDM/chatglm2-6b": "chatglm2",
+    "THUDM/chatglm3-6b": "chatglm3",
+    "THUDM/chatglm3-6b-base": "chatglm3",
+    "deepseek-ai/deepseek-coder-6.7b-base": "deepseek_coder",
+    "deepseek-ai/deepseek-coder-6.7b-instruct": "deepseek_coder",
+    "internlm/internlm-7b": "default",
+    "internlm/internlm-20b": "default",
+    "internlm/internlm-chat-7b": "internlm_chat",
+    "internlm/internlm-chat-20b": "internlm_chat",
+    "huggyllama/llama-7b": "default",
+    "meta-llama/Llama-2-7b-hf": "llama2_chat",
+    "meta-llama/Llama-2-7b-chat-hf": "llama2_chat",
+    "meta-llama/Llama-2-70b-hf": "llama2_chat",
+    "lmsys/vicuna-7b-v1.5": "vicuna",
+    "lmsys/vicuna-13b-v1.5": "vicuna",
+    "mistralai/Mistral-7B-v0.1": "mistral",
+    "mistralai/Mixtral-8x7B-v0.1": "mixtral",
+    "mistralai/Mixtral-8x7B-Instruct-v0.1": "mixtral",
+    "Qwen/Qwen-1_8B": "default",
+    "Qwen/Qwen-1_8B-Chat": "qwen_chat",
+    "Qwen/Qwen-7B": "default",
+    "Qwen/Qwen-7B-Chat": "qwen_chat",
+    "Qwen/Qwen-72B": "default",
+    "Qwen/Qwen-72B-Chat": "qwen_chat",
+    "bigcode/starcoder": "default",
+    "01-ai/Yi-6B": "default",
+    "01-ai/Yi-34B": "default",
+    "HuggingFaceH4/zephyr-7b-beta": "zephyr",
+    "deepseek-ai/deepseek-moe-16b-base": "deepseek_moe",
+    "deepseek-ai/deepseek-moe-16b-chat": "deepseek_moe",
+    "internlm/internlm2-7b": "default",
+    "internlm/internlm2-20b": "default",
+    "internlm/internlm2-chat-7b": "internlm2_chat",
+    "internlm/internlm2-chat-20b": "internlm2_chat"
+}
 
 DATA2MAPFN = {
     'tatsu-lab/alpaca': 'alpaca_map_fn',
@@ -33,6 +80,15 @@ def data_path_map_fn(file):
             return v
     return None
 
+def mdoel_path_map_fn(file):
+    if file in MODEL_TO_TEMPLATE:
+        return MODEL_TO_TEMPLATE[file]
+    for k, v in MODEL_TO_TEMPLATE.items():
+        k_list = k.split('/')
+        k_fix = '_'.join(k_list)
+        if k_fix in file:
+            return v
+    return None
 
 """
 save_checkpoint_ratio -> save_checkpoint_interval
@@ -140,11 +196,11 @@ def build_config(
         optim_type, weight_decay, max_norm, dataloader_num_workers, beta1, beta2, 
         prompt_template):
     if ft_method == 'full':
-        cfg = Config.fromfile(f'{CUR_DIR}/template_configs/full_finetune.py')
+        cfg = Config.fromfile(f'{TEMPLATE_DIR}/full_finetune.py')
     elif ft_method == 'lora':
-        cfg = Config.fromfile(f'{CUR_DIR}/template_configs/lora.py')
+        cfg = Config.fromfile(f'{TEMPLATE_DIR}/lora.py')
     elif ft_method == 'qlora':
-        cfg = Config.fromfile(f'{CUR_DIR}/template_configs/qlora.py')
+        cfg = Config.fromfile(f'{TEMPLATE_DIR}/qlora.py')
     else:
         raise NotImplementedError(f'Expect ft_method to be one of (full, lora, qlora), but got {ft_method}.')
 
@@ -234,17 +290,37 @@ def build_config_path(root_dir):
     return os.path.join(work_dir, 'xtuner_config.py')
 
 
-def build_and_save_config(dataset_personal_path, root_dir, *args, **kwargs):
+def build_and_save_config(
+    dataset_personal_path, 
+    model_personal_path,
+    customer,
+    root_dir, 
+    *args, **kwargs
+):
     kwargs.update(
         dict(zip(default_args_key, list(args)))
     )
     print(f'dataset_personal_path={dataset_personal_path}||')
+    # float -> int
+    for k in int_args:
+        kwargs[k] = int(kwargs[k])
+    # custom dataset
     kwargs['is_custom_dataset'] = False
     if dataset_personal_path is not None and len(dataset_personal_path) >= 3:
         kwargs['is_custom_dataset'] = True 
         kwargs['dataset'] = dataset_personal_path
-    for k in int_args:
-        kwargs[k] = int(kwargs[k])
+
+    
+    
+    # dropdown-list prompt_template
+    prompt_template = mdoel_path_map_fn(kwargs['model_path'])
+    if model_personal_path is not None and len(model_personal_path) >= 3:
+        kwargs['model_path'] = model_personal_path
+        # custom model just 
+        check_status, prompt_template = get_prompt_template(kwargs['model_path'])
+
+    # final prompt_template
+    kwargs['prompt_template'] = prompt_template
     print(f'kwargs={kwargs}')
     cfg = build_config(**kwargs)
     cfg_py = build_config_path(root_dir)
