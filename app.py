@@ -349,7 +349,7 @@ with gr.Blocks() as demo:
 
             # root_dir, config_file, epoch_pth, model_path, customer_model_path)
             # todo ft_method full-convert  oth-convert+merge
-            covert_hf.click(convert_and_merged, inputs=[local_path, cfg_py_box, select_checkpoint, model_path, model_personal_path], outputs=[wrong_message6, covert_hf_path]) 
+            covert_hf.click(convert_and_merged, inputs=[local_path, cfg_py_box, select_checkpoint, model_path, model_personal_path, ft_method], outputs=[wrong_message6, covert_hf_path]) 
         with gr.Accordion(label='对话测试', open=False):
             with gr.Row():
                 with gr.Accordion(label="原模型对话测试", open=True):

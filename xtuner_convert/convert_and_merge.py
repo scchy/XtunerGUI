@@ -27,9 +27,16 @@ def build_convert_and_merged_path(root_dir, epoch_pth):
     return work_dir, hf, mg
 
 
-def convert_and_merged(root_dir, config_file, epoch_pth, model_path, model_personal_path, merged_flag=False):
+def convert_and_merged(root_dir, config_file, epoch_pth, model_path, model_personal_path, ft_method):
     if len(model_personal_path) >= 3:
         model_path = model_personal_path
+        
+    # 增加判断是微调还是全量训练
+    if ft_method == 'lora' or ft_method == 'qlora':
+        merged_flag = False
+    else:
+        merged_flag = True
+
     work_dir, save_hf_dir, save_merged_dir = build_convert_and_merged_path(root_dir, epoch_pth)
     pth_model = os.path.join(work_dir, epoch_pth)
     print(
