@@ -141,6 +141,7 @@ with gr.Blocks() as demo:
                 model_personal_path = gr.Textbox(label='自定义模型本地路径', info = '请输入模型的本地路径在下方，或将文件压缩上传到下方的位置（建议直接填写本地路径）')
                 personal_model = gr.Files(label='请上传自定义模型文件')
                 check_personal_model = gr.Button('模型检查及提示词模板自动匹配（请务必点击！）')
+                # todo markdown status
                 # detect_prompt_template = gr.Markdown() #可用于承接检查后得到的结果
                 detect_prompt_template = gr.Textbox(label='检测后的prompt_template', value=' ') #可用于承接检查后得到的结果
                 check_personal_model.click(app_get_prompt_template, inputs=[model_personal_path], outputs=[detect_prompt_template])
@@ -160,6 +161,7 @@ with gr.Blocks() as demo:
                 check_personal_dataset.click(check_custom_dataset, inputs=[dataset_personal_path, dataset_personal], outputs=wrong_message3)
                 
                 with gr.Accordion(label="数据集预览",open=False):
+                    # todo 数据集预览接入
                     dataset_preview = gr.TextArea(label='数据集展示', info = '截取前n行内容，可用于对比原数据集格式。')
                     #dataset_preview = gr.JSON(label='数据集展示')
 
@@ -168,7 +170,6 @@ with gr.Blocks() as demo:
                 
         with gr.Accordion(label="对应提示词模版展示",open=False):
             with gr.Row():
-                # todo map function 
                 prompt_template = gr.Dropdown(PROMPT_TEMPLATE_LIST, label='提示词模版', info='请选择合适的提示词模版',interactive=True)
                 prompt_template_show = gr.TextArea(label='提示词模版展示')
                 
@@ -193,6 +194,7 @@ with gr.Blocks() as demo:
                 max_epochs = gr.Number(label='训练迭代数(max_epochs)', value=2, info='请选择合适的训练迭代数')
                 save_checkpoint_interval = gr.Number(label='保存权重的间隔', value=1000, info='请输入保存checkpoint的间隔')
                 save_total_limit = gr.Number(label='最多保存权重文件的个数', value=2, info='控制保存权重文件的个数，以免出现内存不足的情况') 
+            # todo: 测试问题 多个的问题
             with gr.Accordion(label="测试问题模版", open=False):
                 evaluation_freq = gr.Number(label='验证对话效果频率(evaluation_freq)', value=100, info='请确定模型每多少轮需要验证一次对话效果')
                 evaluation_system_prompt = gr.Textbox(label = '系统提示词', value='', info='请设置在评估模式下的System Prompt')
@@ -281,6 +283,7 @@ with gr.Blocks() as demo:
         deepspeed.change(TR_CLS.reset_deepspeed, inputs=[deepspeed])
         local_path_button.click(TR_CLS.reset_work_dir, inputs=[local_path])
         with gr.Row():
+            # todo: progress
             train_model = gr.Button('Xtuner！启动！',size='lg')
             stop_button = gr.Button('训练中断',size='lg')
 
@@ -288,14 +291,13 @@ with gr.Blocks() as demo:
             train_model.click(TR_CLS.quick_train, outputs=[work_path])
             stop_button.click(TR_CLS.break_train, outputs=[work_path])
             # stop_button.click(empty_break_fn, outputs=[work_path])
-
+        tmp_trian_pg_md = gr.Markdown()
         with gr.Accordion(label='模型续训', open=False):
             retry_path_dropdown = gr.Dropdown(choices=['1.pth','50.pth'],label='请选择需要继续训练的权重文件')
             retry_button = gr.Button('继续训练')
             retry_path_dropdown.change(TR_CLS.reset_resume_from_checkpoint, inputs=[retry_path_dropdown])
             retry_button.click(TR_CLS.resume_train, outputs=[work_path])
 
-        # todo: train_model 或者 retry_button
         with gr.Accordion(label="终端界面",open=False):
             log_file = gr.TextArea(label='日志文件打印', info= '点击可查看模型训练信息')        
             # train_model.click(TR_CLS.start_log, outputs=[log_file])
@@ -311,11 +313,11 @@ with gr.Blocks() as demo:
         local_path_button.click(PLT.reset_work_dir, inputs=[local_path])
         work_path.change(PLT.reset_work_dir, inputs=[local_path])
         with gr.Tab('训练结果'):
-            with gr.Row():
-                ft_model_save_path = gr.Textbox(label='模型保存路径',visible=False)
+            # with gr.Row():
+                # ft_model_save_path = gr.Textbox(label='模型保存路径',visible=False)
                 # detect work_dir find newest 
-                iter_num = gr.Number(label='训练轮数', scale=1)
-                num_pth = gr.Number(label='权重文件数量', scale=1)
+                # iter_num = gr.Number(label='训练轮数', scale=1)
+                # num_pth = gr.Number(label='权重文件数量', scale=1)
             with gr.Row():                
                 # lr_plot = gr.Image(label='学习率变化图',container=False,show_download_button=False,interactive=False)
                 # loss_graph = gr.Image(label='损失变化图',container=False,show_download_button=False)
@@ -328,6 +330,7 @@ with gr.Blocks() as demo:
 
             show_evaluation_button.click(PLT.lr_plot, outputs=[lr_plot])
             show_evaluation_button.click(PLT.loss_plot, outputs=[loss_graph])
+            # todo: check  evaluation_question
             show_evaluation_button.click(PLT.dynamic_drop_down, outputs=num_pth_evaluation)
         # gr.Markdown('## 5. 实际案例')
         # ft_examples = gr.Examples(examples=[['qlora','internlm','Medqa2019'],['qlora','自定义','自定义']],inputs=[ft_method ,model ,dataset],label='例子')
@@ -345,6 +348,7 @@ with gr.Blocks() as demo:
             wrong_message6 = gr.Markdown()
 
             # root_dir, config_file, epoch_pth, model_path, customer_model_path)
+            # todo ft_method full-convert  oth-convert+merge
             covert_hf.click(convert_and_merged, inputs=[local_path, cfg_py_box, select_checkpoint, model_path, model_personal_path], outputs=[wrong_message6, covert_hf_path]) 
         with gr.Accordion(label='对话测试', open=False):
             with gr.Row():
