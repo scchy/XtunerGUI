@@ -141,11 +141,10 @@ with gr.Blocks() as demo:
                 model_personal_path = gr.Textbox(label='自定义模型本地路径', info = '请输入模型的本地路径在下方，或将文件压缩上传到下方的位置（建议直接填写本地路径）')
                 personal_model = gr.Files(label='请上传自定义模型文件')
                 check_personal_model = gr.Button('模型检查及提示词模板自动匹配（请务必点击！）')
-                # todo markdown status
-                # detect_prompt_template = gr.Markdown() #可用于承接检查后得到的结果
-                detect_prompt_template = gr.Textbox(label='检测后的prompt_template', value=' ') #可用于承接检查后得到的结果
-                check_personal_model.click(app_get_prompt_template, inputs=[model_personal_path], outputs=[detect_prompt_template])
-                
+                detect_prompt_status = gr.Markdown() #可用于承接检查后得到的结果
+                # 上传文件自动显示在 model_personal_path
+                personal_model.change(lambda x: x, inputs=[personal_model], outputs=[model_personal_path])
+
             with gr.Accordion(label="自定义数据集（仅支持OpenAI格式）",open=False):
                 with gr.Row():
                     with gr.Column():
@@ -154,29 +153,28 @@ with gr.Blocks() as demo:
                         #dataset_type_preview = gr.JSON(label='数据集格式展示')
                     with gr.Column():
                         dataset_personal_path = gr.Textbox(label = '数据集本地路径', info='请填入本地数据集路径或直接在下方上传数据文件')
-                        dataset_personal_path_button = gr.Button('请点击上传数据集本地路径')
+                        dataset_personal_path_upload = gr.Button('请点击上传数据集本地路径')
                         dataset_personal = gr.Files(label='请上传自定义的数据集或在上方填入本地路径',type='filepath')
                 check_personal_dataset = gr.Button('检查数据集是否符合要求')
                 wrong_message3 = gr.Markdown() #判定数据集格式是否符合要求，符合就在上面显示
+                # 上传文件自动显示在 dataset_personal_path
+                dataset_personal.change(lambda x: x, inputs=[dataset_personal], outputs=[dataset_personal_path])
                 check_personal_dataset.click(check_custom_dataset, inputs=[dataset_personal_path, dataset_personal], outputs=wrong_message3)
                 
                 with gr.Accordion(label="数据集预览",open=False):
-                    # todo 数据集预览接入
                     dataset_preview = gr.TextArea(label='数据集展示', info = '截取前n行内容，可用于对比原数据集格式。')
                     #dataset_preview = gr.JSON(label='数据集展示')
 
-                dataset_personal_path_button.click(fn=read_first_ten_lines, inputs=dataset_personal_path, outputs=dataset_preview)
-                dataset_personal.change(fn=read_first_ten_lines, inputs=dataset_personal_path, outputs=dataset_preview)
-                
+                check_personal_dataset.click(fn=read_first_ten_lines, inputs=[dataset_personal_path, dataset_personal], outputs=dataset_preview)
+
         with gr.Accordion(label="对应提示词模版展示",open=False):
             with gr.Row():
                 prompt_template = gr.Dropdown(PROMPT_TEMPLATE_LIST, label='提示词模版', info='请选择合适的提示词模版',interactive=True)
                 prompt_template_show = gr.TextArea(label='提示词模版展示')
                 
+                # 检测完毕后 -> 改变 prompt_template -> prompt_template_show
+                check_personal_model.click(app_get_prompt_template, inputs=[model_personal_path, personal_model], outputs=[detect_prompt_status, prompt_template])
                 prompt_template.change(fn=get_template_format_by_name, inputs=prompt_template, outputs=prompt_template_show)
-                # detect_prompt_template.change(fn=lambda x: x, inputs=detect_prompt_template, outputs=prompt_template)
-                detect_prompt_template.change(fn=get_template_format_by_name, inputs=detect_prompt_template, outputs=prompt_template_show)
-                # model.change(fn=get_template_name_by_model, inputs=model, outputs=prompt_template)
 
         gr.Markdown("## 3. 微调参数设置")
         with gr.Accordion(label="参数调整指南",open=False):
@@ -239,8 +237,10 @@ with gr.Blocks() as demo:
             build_and_save_config, 
             inputs=[
                 dataset_personal_path,
+                dataset_personal,
                 model_personal_path,
-                detect_prompt_template,
+                personal_model,
+                prompt_template,
                 local_path,
                 ft_method,
                 model_path,
@@ -283,15 +283,13 @@ with gr.Blocks() as demo:
         deepspeed.change(TR_CLS.reset_deepspeed, inputs=[deepspeed])
         local_path_button.click(TR_CLS.reset_work_dir, inputs=[local_path])
         with gr.Row():
-            # todo: progress
             train_model = gr.Button('Xtuner！启动！',size='lg')
             stop_button = gr.Button('训练中断',size='lg')
-
             work_path = gr.Textbox(label='work dir',visible=False)
-            train_model.click(TR_CLS.quick_train, outputs=[work_path])
-            stop_button.click(TR_CLS.break_train, outputs=[work_path])
-            # stop_button.click(empty_break_fn, outputs=[work_path])
+
         tmp_trian_pg_md = gr.Markdown()
+        train_model.click(TR_CLS.quick_train, outputs=[tmp_trian_pg_md, work_path])
+        stop_button.click(TR_CLS.break_train, outputs=[tmp_trian_pg_md, work_path])
         with gr.Accordion(label='模型续训', open=False):
             retry_path_dropdown = gr.Dropdown(choices=['1.pth','50.pth'],label='请选择需要继续训练的权重文件')
             retry_button = gr.Button('继续训练')
@@ -327,13 +325,13 @@ with gr.Blocks() as demo:
                 num_pth_evaluation = gr.Dropdown(choices=['epoch_1.pth', 'epoch_1.pth'], label='请选择权重文件', info='请选择对应的权重文件进行测试',scale=1)
                 evaluation_question = gr.TextArea(label='测试问题结果',scale=3)
             show_evaluation_button = gr.Button('微调结果生成')
-
-            show_evaluation_button.click(PLT.lr_plot, outputs=[lr_plot])
-            show_evaluation_button.click(PLT.loss_plot, outputs=[loss_graph])
+            show_evaluation_button.click(PLT.reset_work_dir, inputs=[local_path], queue=True)
+            show_evaluation_button.click(PLT.lr_plot, outputs=[lr_plot], queue=True)
+            show_evaluation_button.click(PLT.loss_plot, outputs=[loss_graph], queue=True)
             # todo: check  evaluation_question
-            show_evaluation_button.click(PLT.dynamic_drop_down, outputs=num_pth_evaluation)
-        # gr.Markdown('## 5. 实际案例')
-        # ft_examples = gr.Examples(examples=[['qlora','internlm','Medqa2019'],['qlora','自定义','自定义']],inputs=[ft_method ,model ,dataset],label='例子')
+            show_evaluation_button.click(PLT.dynamic_drop_down, outputs=num_pth_evaluation, queue=True)
+            # 找到 & read eval 
+            # num_pth_evaluation.change(PLT.get_eval_test, outputs=[evaluation_question])
 
         gr.Markdown("## 6. 微调模型转化及测试")
         
@@ -341,7 +339,7 @@ with gr.Blocks() as demo:
             # Textbox
             # select_checkpoint =gr.Dropdown(choices=['epoch_1.pth', 'epoch_1.pth'], value='epoch_1.pth', label='微调模型的权重文件', info = '请选择需要进行测试的模型权重文件并进行转化')
             select_checkpoint = gr.Dropdown(choices=['epoch_1.pth'],  label='微调模型的权重文件', info = '请选择需要进行测试的模型权重文件并进行转化',interactive = True)
-            show_evaluation_button.click(PLT.dynamic_drop_down, outputs=select_checkpoint)
+            show_evaluation_button.click(PLT.dynamic_drop_down, outputs=select_checkpoint, queue=True)
             
             covert_hf = gr.Button('模型转换',scale=1)
             covert_hf_path = gr.Textbox(label='模型转换后地址', visible=False) # False

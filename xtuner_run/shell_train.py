@@ -78,8 +78,8 @@ class quickTrain:
         self._t_start(0)
         self._t_handle_tr.join()
         if self._break_flag:
-            return f"Done! Xtuner had interrupted!\nwork_dir={self.work_dir}"
-        return self.work_dir
+            return f"Done! Xtuner had interrupted!\nwork_dir={self.work_dir}", self.work_dir
+        return "Success", self.work_dir
 
     def resume_train(self, progress=gr.Progress(track_tqdm=True)):
         self._break_flag = False

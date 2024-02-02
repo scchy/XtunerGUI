@@ -32,6 +32,12 @@ class resPlot:
             print(e)
             pass
     
+    def get_eval_test(self, ep_pth):
+        ep = ep_pth.split('.')[0]
+        list_ =  sorted([i for i in os.listdir(self.work_dir) if '.' not in i and re.match(r'\d+_\d+', i)])
+        dir_name = list_[-1]
+        self.log_file = os.path.join(self.work_dir, dir_name, 'vis_data' , f'{ep}.text')
+    
     def dynamic_drop_down(self):
         return gr.Dropdown(choices=self.iter_dir_list, interactive=True)
 

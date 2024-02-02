@@ -291,8 +291,10 @@ def build_config_path(root_dir):
 
 
 def build_and_save_config(
-    dataset_personal_path, 
+    dataset_personal_path,
+    dataset_personal,
     model_personal_path,
+    personal_model,
     detect_prompt_template,
     root_dir, 
     *args, **kwargs
@@ -306,14 +308,20 @@ def build_and_save_config(
         kwargs[k] = int(kwargs[k])
     # custom dataset
     kwargs['is_custom_dataset'] = False
+    # dataset_personal_path > dataset_personal > dataset
+    if dataset_personal is not None and len(dataset_personal) >= 3:
+        kwargs['is_custom_dataset'] = True 
+        kwargs['dataset'] = dataset_personal
     if dataset_personal_path is not None and len(dataset_personal_path) >= 3:
         kwargs['is_custom_dataset'] = True 
         kwargs['dataset'] = dataset_personal_path
-
-    
     
     # dropdown-list prompt_template
     prompt_template = mdoel_path_map_fn(kwargs['model_path'])
+    if personal_model is not None and len(personal_model) >= 3:
+        kwargs['model_path'] = personal_model
+        prompt_template = detect_prompt_template
+
     if model_personal_path is not None and len(model_personal_path) >= 3:
         kwargs['model_path'] = model_personal_path
         prompt_template = detect_prompt_template
