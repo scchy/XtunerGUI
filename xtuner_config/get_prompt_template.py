@@ -47,9 +47,11 @@ def get_prompt_template(pretrained_model_name_or_path):
         return 'Fail to match automatically, please enter corresponding prompt template manually', None
     
 
-def app_get_prompt_template(pretrained_model_name_or_path):
+def app_get_prompt_template(input_path, upload_path):
+    print(f'app_get_prompt_template({input_path}, {upload_path})')
+    pretrained_model_name_or_path = input_path if len(input_path) >= 3 else upload_path
     info, prompt_template = get_prompt_template(pretrained_model_name_or_path)
-    return prompt_template
+    return f'{info} >> {prompt_template}', prompt_template
 
 
 if __name__ == "__main__":

@@ -21,7 +21,8 @@ OPENAI_FORMAT = '''
 ]
 '''
 
-def read_first_ten_lines(file_path):
+def read_first_ten_lines(input_path, upload_path):
+    file_path = input_path if len(input_path) >= 3 else upload_path
     try:
         with open(file_path, 'r', encoding='utf-8') as file:
             lines = file.readlines()  # 读取所有行
