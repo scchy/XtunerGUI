@@ -301,7 +301,7 @@ def build_and_save_config(
     )
     # prepare 'evaluation_inputs'
     evaluation_inputs = list(args)[len(default_args_key):]
-    kwargs['evaluation_inputs'] = evaluation_inputs
+    kwargs['evaluation_inputs'] = [i for i in evaluation_inputs if len(i)]
     print(f'dataset_personal_path={dataset_personal_path}||')
     # float -> int
     for k in int_args:
@@ -328,6 +328,8 @@ def build_and_save_config(
 
     # final prompt_template
     kwargs['prompt_template'] = prompt_template
+    if kwargs['prompt_template'] is None:
+        kwargs['prompt_template'] = detect_prompt_template
     print(f'kwargs={kwargs}')
     cfg = build_config(**kwargs)
     cfg_py = build_config_path(root_dir)
