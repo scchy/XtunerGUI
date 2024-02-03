@@ -72,7 +72,7 @@ def regenerate(chat_history):
 def evaluation_question_number_change_wrap(max_textboxes):
     def evaluation_question_number_change(k):
         k = int(k)
-        return [gr.Textbox(visible=True)]*k + [gr.Textbox(visible=False)]*(max_textboxes-k)
+        return [gr.Textbox(visible=True)]*k + [gr.Textbox(value='', visible=False)]*(max_textboxes-k)
     return evaluation_question_number_change
 
 with gr.Blocks() as demo:
