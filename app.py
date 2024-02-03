@@ -5,6 +5,7 @@
 from xtuner_download.download_model import xtunerModelDownload
 from xtuner_download.download_dataset import xtunerDataDownload
 from xtuner_convert.convert_and_merge import convert_and_merged
+from xtuner_convert.convert_with_progress import ConvertMerged
 from xtuner_run.shell_train import quickTrain
 from appPrepare.files_prepare import DATA_DOWNLOAD_DIR, MODEL_DOWNLOAD_DIR, CUR_PATH, DEFAULT_DOWNLOAD_DIR
 from appPrepare.list_prepare import DATA_LIST, MODEL_LIST, PROMPT_TEMPLATE_LIST
@@ -21,6 +22,7 @@ import warnings
 warnings.filterwarnings(action='ignore')
 CHAT_ORG = ModelCenter()
 FT_CHAT_ORG = ModelCenter()
+CVT_MG = ConvertMerged()
 
 def combine_message_and_history(message, chat_history):
     # 将聊天历史中的每个元素（假设是元组）转换为字符串
@@ -376,14 +378,14 @@ with gr.Blocks() as demo:
 
             # root_dir, config_file, epoch_pth, model_path, customer_model_path)
             # todo ft_method full-convert  oth-convert+merge
-            covert_hf.click(convert_and_merged, inputs=[local_path, cfg_py_box, select_checkpoint, model_path, model_personal_path], outputs=[wrong_message6, covert_hf_path]) 
+            covert_hf.click(CVT_MG.auto_convert_merge, inputs=[local_path, cfg_py_box, select_checkpoint, model_path, model_personal_path, ft_method], outputs=[wrong_message6, covert_hf_path]) 
         with gr.Accordion(label='对话测试', open=False):
             with gr.Row():
                 with gr.Accordion(label="原模型对话测试", open=True):
                     with gr.Column():
                         with gr.Accordion(label='参数设置',open=False):
                             max_new_tokens = gr.Slider(minimum=0, maximum=4096 ,value=1024, label='模型输出的最长Toekn', info='Token越多，模型能够回复的长度就越长')
-                            bits =  gr.Radio(choices=['int4', 'int8', 'None'],value='None', label='量化', info='请选择模型量化程度', interactive=True)
+                            # bits =  gr.Radio(choices=['int4', 'int8', 'None'],value='None', label='量化', info='请选择模型量化程度', interactive=True)
                             temperature = gr.Slider(maximum=1,minimum=0.9,label='温度值',info='温度值越高，模型输出越随机')
                             top_k=gr.Slider(minimum=0, maximum=100, value=40, label='top-k',info='')
                             top_p = gr.Slider(minimum=0, maximum=2, value=0.75, label='top-p',info='')
@@ -410,7 +412,7 @@ with gr.Blocks() as demo:
                     with gr.Column():
                         with gr.Accordion(label='参数设置',open=False):
                             ft_max_new_tokens = gr.Slider(minimum=0, maximum=4096 ,value=1024, label='模型输出的最长Toekn', info='Token越多，模型能够回复的长度就越长')
-                            ft_bits =  gr.Radio(choices=['int4', 'int8', 'None'],value='None', label='量化', info='请选择模型量化程度', interactive=True)
+                            # ft_bits =  gr.Radio(choices=['int4', 'int8', 'None'],value='None', label='量化', info='请选择模型量化程度', interactive=True)
                             
                             ft_temperature = gr.Slider(maximum=1,minimum=0.9,label='温度值',info='温度值越高，模型输出越随机')
                             ft_top_k=gr.Slider(minimum=0, maximum=100, value=40, label='top-k',info='')

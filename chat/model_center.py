@@ -46,7 +46,7 @@ class ModelCenter():
             if question == None or len(question) < 1:
                 return "", chat_history
             try:
-                question = question.replace(" ", '')
+                question = question.replace("  ", ' ')
                 response, history = self.model.chat(
                     self.tokenizer, 
                     question, 
