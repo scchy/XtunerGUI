@@ -23,6 +23,8 @@ class ConvertMerged:
             
         self.model_path = model_path
         work_dir, save_hf_dir, save_merged_dir = build_convert_and_merged_path(root_dir, epoch_pth)
+        self.save_hf_dir = save_hf_dir
+        self.save_merged_dir = save_merged_dir
         pth_model = os.path.join(work_dir, epoch_pth)
         print(
             f'config_file = {config_file}'
@@ -56,6 +58,12 @@ class ConvertMerged:
         progress=gr.Progress(track_tqdm=True)
         ):
         self._t_convert(root_dir, config_file, epoch_pth, model_path, model_personal_path, ft_method)
+        time.sleep(2)
+        print(
+            f'self.model_path={self.model_path}',
+            f'self.save_hf_dir={self.save_hf_dir}',
+            f'self.save_merged_dir={self.save_merged_dir}'
+        )
         self.progress()
         return self.info, self.out_dir
 
@@ -68,12 +76,13 @@ class ConvertMerged:
     def find_max_sub(self, _dir):
         total_ = [i for i in os.listdir(_dir) if len(re.findall(r'[0-9]+-of-[0-9]+', i))]
         if len(total_):
-            info = [int(i) for i in total_ if re.findall(r'(\d+)-of', i)]
+            info = [int(re.findall(r'(\d+)-of', i)[0]) for i in total_ if len(re.findall(r'(\d+)-of', i))]
             if len(info):
                 return max(info)
         return 0
         
     def progress(self, progress=None):  
+        big_step = 100
         total = 0
         hf_total = 1
         # /root/share/model_repos/internlm-chat-7b/pytorch_model-00001-of-00008.bin
@@ -88,12 +97,13 @@ class ConvertMerged:
         else:
             total = hf_total = base_max 
         
+        hf_total *= big_step
+        total *= big_step
         tq_bar = tqdm(total=total)
-        int_hf_now = 0
-        int_mg_now = 0
+        big_step_hf_now = 0
+        big_step_mg_now = 0
         hf_now = 0
         mg_now = 0
-        hf_max_n_in_merge = 1
         while True:
             if self._t_handle_convert is None:
                 break
@@ -101,43 +111,44 @@ class ConvertMerged:
                 break
             
             if os.path.exists(self.save_hf_dir) and not self.merged_flag:
-                max_hf_b = self.find_max_sub(self.save_hf_dir)
+                max_hf_b = self.find_max_sub(self.save_hf_dir) * big_step
                 # 在一个的时候
-                if int_hf_now == max_hf_b and  int_hf_now + 1 > hf_now and hf_now < hf_total:
-                    up_hf = 0.01
-                    hf_now += 0.01
+                if big_step_hf_now == max_hf_b and  big_step_hf_now + big_step > hf_now and hf_now < hf_total:
+                    up_hf = 1
+                    hf_now += 1
                 else: 
                     up_hf = max_hf_b - hf_now
                     hf_now = max_hf_b
 
-                int_hf_now = max_hf_b
+                big_step_hf_now = max_hf_b
             elif self.merged_flag and not os.path.exists(self.save_hf_dir):
-                if hf_max_n_in_merge >= hf_now:
-                    up_hf = 0.01
-                    hf_now += 0.01
+                if big_step >= hf_now:
+                    up_hf = 1
+                    hf_now += 1
             else:
-                max_hf_b = 1
+                max_hf_b = big_step
                 up_hf = max_hf_b - hf_now
                 hf_now = max_hf_b
 
             up_mg = 0
-            if os.path.exists(self.save_merged_dir):
-                max_mg_b = self.find_max_sub(self.save_merged_dir)
-                up_mg = max_mg_b - mg_now
-                mg_now = max_mg_b
-                
-                # 在一个的时候
-                if int_mg_now == max_mg_b and  int_mg_now + 1 > mg_now and mg_now + hf_now < total:
-                    up_mg = 0.01
-                    mg_now += 0.01
-                else: 
-                    up_mg = max_hf_b - mg_now
-                    mg_now = max_hf_b
+            if self.merged_flag:
+                if not os.path.exists(self.save_merged_dir):
+                    if big_step > mg_now:
+                        up_mg = 1
+                        mg_now += 1
+                else:
+                    max_mg_b = self.find_max_sub(self.save_merged_dir) * big_step
+                    # 在一个的时候
+                    if big_step_mg_now == max_mg_b and big_step_mg_now + big_step > mg_now \
+                        and mg_now + hf_now < total:
+                        up_mg = 1
+                        mg_now += 1
+                    else: 
+                        up_mg = max_mg_b - mg_now
+                        mg_now = max_mg_b
 
-                int_mg_now = max_hf_b
+                    big_step_mg_now = max_mg_b
 
             tq_bar.update(up_mg + up_hf)
-            time.sleep(1)
-
-
+            time.sleep(0.5)
 
