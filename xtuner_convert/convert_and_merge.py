@@ -27,7 +27,7 @@ def build_convert_and_merged_path(root_dir, epoch_pth):
     return work_dir, hf, mg
 
 
-def convert_and_merged(root_dir, config_file, epoch_pth, model_path, model_personal_path, merged_flag=False):
+def convert_and_merged(root_dir, config_file, epoch_pth, model_path, model_personal_path, ft_method):
     if len(model_personal_path) >= 3:
         model_path = model_personal_path
     work_dir, save_hf_dir, save_merged_dir = build_convert_and_merged_path(root_dir, epoch_pth)
@@ -39,6 +39,7 @@ def convert_and_merged(root_dir, config_file, epoch_pth, model_path, model_perso
         ,f'\nmodel_path ={model_path}' 
         ,f'\nsave_merged_dir ={save_merged_dir}' 
     )
+    merged_flag = ft_method != 'full'
     try:
         convert_to_hf(config_file, pth_model, save_hf_dir)
         out_dir = save_hf_dir

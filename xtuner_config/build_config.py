@@ -179,20 +179,20 @@ def set_checkpoint_related(cfg, save_checkpoint_interval, save_total_limit):
     cfg.default_hooks.checkpoint.max_keep_ckpts = save_total_limit
 
 
-def set_evaluate_related(cfg, evaluation_freq, evaluation_system_prompt, evaluation_input1, evaluation_input2):
+def set_evaluate_related(cfg, evaluation_freq, evaluation_system_prompt, evaluation_inputs):
     traverse_keys(cfg._cfg_dict, ('evaluation_freq', 'every_n_iters'), evaluation_freq)
 
     system_prompt = SYSTEM_TEMPLATE[evaluation_system_prompt] if evaluation_system_prompt else ''
     traverse_keys(cfg._cfg_dict, ('SYSTEM', 'system'), system_prompt)
 
-    evaluation_inputs = [evaluation_input1, evaluation_input2]
+    # evaluation_inputs = [evaluation_input1, evaluation_input2]
     traverse_keys(cfg._cfg_dict, ('evaluation_inputs', ), evaluation_inputs)
 
 
 def build_config(
         ft_method, model_path, dataset, is_custom_dataset, deepspeed, lr, warmup_ratio, batch_size_per_device,
         accumulative_counts, num_GPU, max_length, pack_to_max_length, max_epochs, save_checkpoint_interval, save_total_limit,
-        evaluation_freq, evaluation_system_prompt, evaluation_input1, evaluation_input2,
+        evaluation_freq, evaluation_system_prompt, evaluation_inputs,
         optim_type, weight_decay, max_norm, dataloader_num_workers, beta1, beta2, 
         prompt_template):
     if ft_method == 'full':
@@ -209,7 +209,7 @@ def build_config(
     set_scheduler_optimizer_related(cfg, batch_size_per_device, accumulative_counts, dataloader_num_workers,
         max_epochs, optim_type, lr, beta1, beta2, weight_decay, max_norm, warmup_ratio)
     set_checkpoint_related(cfg, save_checkpoint_interval, save_total_limit)
-    set_evaluate_related(cfg, evaluation_freq, evaluation_system_prompt, evaluation_input1, evaluation_input2)
+    set_evaluate_related(cfg, evaluation_freq, evaluation_system_prompt, evaluation_inputs)
 
     return cfg
 
@@ -232,8 +232,7 @@ kwargs = dict(
     save_total_limit=2,
     evaluation_freq=100,
     evaluation_system_prompt='',
-    evaluation_input1='请给我介绍五个上海的景点',
-    evaluation_input2='Please tell me five scenic spots in Shanghai',
+    evaluation_inputs=['请给我介绍五个上海的景点', 'Please tell me five scenic spots in Shanghai'],
     optim_type='AdamW',
     weight_decay=0,
     max_norm=1,
@@ -272,8 +271,6 @@ default_args_key = [
     'save_total_limit',
     'evaluation_freq',
     'evaluation_system_prompt',
-    'evaluation_input1',
-    'evaluation_input2',
     'optim_type',
     'weight_decay',
     'max_norm',
@@ -302,6 +299,9 @@ def build_and_save_config(
     kwargs.update(
         dict(zip(default_args_key, list(args)))
     )
+    # prepare 'evaluation_inputs'
+    evaluation_inputs = list(args)[len(default_args_key):]
+    kwargs['evaluation_inputs'] = evaluation_inputs
     print(f'dataset_personal_path={dataset_personal_path}||')
     # float -> int
     for k in int_args:

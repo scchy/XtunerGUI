@@ -287,8 +287,6 @@ with gr.Blocks() as demo:
                 save_total_limit,
                 evaluation_freq,
                 evaluation_system_prompt,
-                evaluation_input1,
-                evaluation_input2,
                 optim_type,
                 weight_decay,
                 max_norm,
@@ -296,6 +294,7 @@ with gr.Blocks() as demo:
                 beta1,
                 beta2,
                 prompt_template,
+                *evaluation_question_list
             ],
             outputs=[cfg_py_box]
         )
