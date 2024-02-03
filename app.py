@@ -359,7 +359,7 @@ with gr.Blocks() as demo:
                             temperature = gr.Slider(maximum=1,minimum=0.9,label='温度值',info='温度值越高，模型输出越随机')
                             top_k=gr.Slider(minimum=0, maximum=100, value=40, label='top-k',info='')
                             top_p = gr.Slider(minimum=0, maximum=2, value=0.75, label='top-p',info='')
-                            
+                            num_beams = gr.Slider(minimum=0, maximum=12, value=5, label='beam search',info='')
                             #还可以添加更多
                             wrong_message9 = gr.Markdown()
                         start_testing_model = gr.Button('模型启动')
@@ -376,7 +376,7 @@ with gr.Blocks() as demo:
                         
                         clear.click(CHAT_ORG.qa_clear, inputs=[chatbot], outputs=[chatbot])
                         undo.click(CHAT_ORG.qa_undo, inputs=[chatbot], outputs=[chatbot])
-                        regenerate.click(CHAT_ORG.qa_answer, inputs=[msg, max_new_tokens, temperature, top_k, top_p, chatbot], outputs=[msg, chatbot])
+                        regenerate.click(CHAT_ORG.qa_answer, inputs=[msg, max_new_tokens, temperature, top_k, top_p, num_beams, chatbot], outputs=[msg, chatbot])
                         
                 with gr.Accordion(label="微调模型对话测试", open=True):
                     with gr.Column():
@@ -387,6 +387,7 @@ with gr.Blocks() as demo:
                             ft_temperature = gr.Slider(maximum=1,minimum=0.9,label='温度值',info='温度值越高，模型输出越随机')
                             ft_top_k=gr.Slider(minimum=0, maximum=100, value=40, label='top-k',info='')
                             ft_top_p = gr.Slider(minimum=0, maximum=2, value=0.75, label='top-p',info='')
+                            ft_num_beams = gr.Slider(minimum=0, maximum=12, value=5, label='beam search',info='')
                             
                             #还可以添加更多
                             ft_wrong_message9 = gr.Markdown()
@@ -403,7 +404,7 @@ with gr.Blocks() as demo:
                         
                         ft_clear.click(FT_CHAT_ORG.qa_clear, inputs=[ft_chatbot], outputs=[ft_chatbot])
                         ft_undo.click(FT_CHAT_ORG.qa_undo, inputs=[ft_chatbot], outputs=[ft_chatbot])
-                        ft_regenerate.click(FT_CHAT_ORG.qa_answer, inputs=[ft_msg, ft_max_new_tokens, ft_temperature, ft_top_k, ft_top_p, ft_chatbot], outputs=[ft_msg, ft_chatbot])
+                        ft_regenerate.click(FT_CHAT_ORG.qa_answer, inputs=[ft_msg, ft_max_new_tokens, ft_temperature, ft_top_k, ft_top_p, ft_num_beams, ft_chatbot], outputs=[ft_msg, ft_chatbot])
         # with gr.Accordion(label='模型基础能力评估测试',open=False):
         #     mmlu_test_button = gr.Button('MMLU模型能力评估测试')
         with gr.Accordion(label="其他信息", open=True):

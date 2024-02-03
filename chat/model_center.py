@@ -42,7 +42,7 @@ class ModelCenter():
             return personal_model
         return model_path_in
 
-    def qa_answer(self, question: str, max_new_tokens, temperature, top_k, top_p, chat_history: list = []):
+    def qa_answer(self, question: str, max_new_tokens, temperature, top_k, top_p, num_beams, chat_history: list = []):
             if question == None or len(question) < 1:
                 return "", chat_history
             try:
@@ -54,7 +54,8 @@ class ModelCenter():
                     max_new_tokens=max_new_tokens,
                     temperature=temperature,
                     top_k=top_k,
-                    top_p=top_p
+                    top_p=top_p,
+                    num_beams=int(num_beams)
                 )
                 chat_history.append((question, response))
                 return "", chat_history
