@@ -317,7 +317,7 @@ with gr.Blocks() as demo:
 
         tmp_trian_pg_md = gr.Markdown()
         train_model.click(TR_CLS.quick_train, outputs=[tmp_trian_pg_md, work_path])
-        stop_button.click(TR_CLS.break_train, outputs=[tmp_trian_pg_md, work_path])
+        stop_button.click(TR_CLS.break_train, outputs=[tmp_trian_pg_md, work_path], queue=False)
         with gr.Accordion(label='模型续训', open=False):
             retry_path_dropdown = gr.Dropdown(choices=['1.pth','50.pth'],label='请选择需要继续训练的权重文件')
             retry_button = gr.Button('继续训练')
@@ -335,7 +335,7 @@ with gr.Blocks() as demo:
             work_dir = f'{local_path.value}/work_dir',
         )
         # 点击停止训练的时候 retry_path_dropdown 进行更新
-        stop_button.click(PLT.dynamic_drop_down, outputs=retry_path_dropdown)
+        stop_button.click(PLT.dynamic_drop_down, outputs=retry_path_dropdown, queue=False)
         local_path_button.click(PLT.reset_work_dir, inputs=[local_path])
         work_path.change(PLT.reset_work_dir, inputs=[local_path])
         with gr.Tab('训练结果'):
@@ -353,7 +353,7 @@ with gr.Blocks() as demo:
                 num_pth_evaluation = gr.Dropdown(choices=['epoch_1.pth', 'epoch_1.pth'], label='请选择权重文件', info='请选择对应的权重文件进行测试',scale=1)
                 evaluation_question = gr.TextArea(label='测试问题结果',scale=3)
                 
-            stop_button.click(PLT.dynamic_drop_down, outputs=num_pth_evaluation)
+            stop_button.click(PLT.dynamic_drop_down, outputs=num_pth_evaluation, queue=False)
             show_evaluation_button = gr.Button('微调结果生成')
             show_evaluation_button.click(PLT.reset_work_dir, inputs=[local_path], queue=False)
             show_evaluation_button.click(PLT.lr_plot, outputs=[lr_plot], queue=False)
@@ -368,7 +368,7 @@ with gr.Blocks() as demo:
             # Textbox
             # select_checkpoint =gr.Dropdown(choices=['epoch_1.pth', 'epoch_1.pth'], value='epoch_1.pth', label='微调模型的权重文件', info = '请选择需要进行测试的模型权重文件并进行转化')
             select_checkpoint = gr.Dropdown(choices=['epoch_1.pth'],  label='微调模型的权重文件', info = '请选择需要进行测试的模型权重文件并进行转化',interactive = True)
-            stop_button.click(PLT.dynamic_drop_down, outputs=select_checkpoint)
+            stop_button.click(PLT.dynamic_drop_down, outputs=select_checkpoint, queue=False)
             show_evaluation_button.click(PLT.dynamic_drop_down, outputs=select_checkpoint, queue=False)
             
             covert_hf = gr.Button('模型转换',scale=1)
