@@ -110,15 +110,18 @@ class ConvertMerged:
             if not self._t_handle_convert.is_alive():
                 break
             
+            up_hf = 0
             if os.path.exists(self.save_hf_dir) and not self.merged_flag:
                 max_hf_b = self.find_max_sub(self.save_hf_dir) * big_step
                 # 在一个的时候
-                if big_step_hf_now == max_hf_b and  big_step_hf_now + big_step > hf_now and hf_now < hf_total:
+                if big_step_hf_now == max_hf_b and  (big_step_hf_now + big_step) > hf_now and hf_now < hf_total:
                     up_hf = 1
                     hf_now += 1
-                else: 
+                elif max_hf_b > hf_now: 
                     up_hf = max_hf_b - hf_now
                     hf_now = max_hf_b
+                else:
+                    up_hf = 0
 
                 big_step_hf_now = max_hf_b
             elif self.merged_flag and not os.path.exists(self.save_hf_dir):
@@ -139,16 +142,17 @@ class ConvertMerged:
                 else:
                     max_mg_b = self.find_max_sub(self.save_merged_dir) * big_step
                     # 在一个的时候
-                    if big_step_mg_now == max_mg_b and big_step_mg_now + big_step > mg_now \
-                        and mg_now + hf_now < total:
+                    if big_step_mg_now == max_mg_b and (big_step_mg_now + big_step) > mg_now and (mg_now + hf_now) < total:
                         up_mg = 1
                         mg_now += 1
-                    else: 
+                    elif max_mg_b > mg_now: 
                         up_mg = max_mg_b - mg_now
                         mg_now = max_mg_b
+                    else:
+                        up_mg = 0
 
                     big_step_mg_now = max_mg_b
 
             tq_bar.update(up_mg + up_hf)
-            time.sleep(0.5)
+            time.sleep(1)
 
