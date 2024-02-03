@@ -213,20 +213,9 @@ with gr.Blocks() as demo:
                 for i in range(max_evaluation_question_number):
                     evaluation_question_if_visible = True if i < default_evaluation_question_number else False
                     evaluation_question_value = default_evaluation_question_list[i] if i < default_evaluation_question_number else ''
-                    if i == 0:
-                        evaluation_input1 = gr.Textbox(label=f'评估问题{i + 1}', value=evaluation_question_value, interactive=True, placeholder=f"请输入第{i + 1}个评估的问题", visible=evaluation_question_if_visible)
-                        evaluation_question_list.append(evaluation_input1)
-                        continue
-                    elif i == 1:
-                        evaluation_input2 = gr.Textbox(label=f'评估问题{i + 1}', value=evaluation_question_value, interactive=True, placeholder=f"请输入第{i + 1}个评估的问题", visible=evaluation_question_if_visible)
-                        evaluation_question_list.append(evaluation_input2)
-                        continue
-                    else:
-                        t = gr.Textbox(label=f'评估问题{i + 1}', value=evaluation_question_value, interactive=True, placeholder=f"请输入第{i + 1}个评估的问题", visible=evaluation_question_if_visible)
-                        evaluation_question_list.append(t)
+                    t = gr.Textbox(label=f'评估问题{i + 1}', value=evaluation_question_value, interactive=True, placeholder=f"请输入第{i + 1}个评估的问题", visible=evaluation_question_if_visible)
+                    evaluation_question_list.append(t)
                 evaluation_question_number.change(evaluation_question_number_change_wrap(max_evaluation_question_number), evaluation_question_number, evaluation_question_list)
-                # evaluation_input1 = gr.Textbox(label='测试问题1', value='请给我介绍五个上海的景点', info='请输入第一个评估的问题')
-                # evaluation_input2 = gr.Textbox(label='测试问题2', value='Please tell me five scenic spots in Shanghai', info='请输入第二个评估问题')
         with gr.Tab('进阶参数'):
             with gr.Row():
                 optim_type = gr.Dropdown(choices=['AdamW'], value='AdamW', label='优化器', info='请选择合适的优化器（默认为AdamW）',visible=False)
