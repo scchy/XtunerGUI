@@ -43,7 +43,19 @@ class resPlot:
         except Exception as e:
             return f'eval_file={eval_file}\nERROR: {e} '
     
+    def dynamic_eval_drop_down(self):
+        list_ =  sorted([i for i in os.listdir(self.work_dir) if '.' not in i and re.match(r'\d+_\d+', i)])
+        dir_name = list_[-1]
+        # /root/xtunerUITest/test/appPrepare/work_dir/20240204_204337/vis_data/eval_outputs_iter_49.txt
+        eval_file = [i for i in os.listdir(os.path.join(self.work_dir, dir_name, 'vis_data')) if '.txt' in i]
+        final_list = []
+        if len(eval_file):
+            final_list = ["iter_{}".format(int(i.split('_')[-1].split('.')[0])+1) for i in eval_file]
+
+        return gr.Dropdown(choices=final_list, interactive=True)
+    
     def dynamic_drop_down(self):
+        self.iter_dir_list = sorted([i for i in os.listdir(self.work_dir) if '.pth' in i])
         return gr.Dropdown(choices=self.iter_dir_list, interactive=True)
 
     def reset_work_dir(self, root_dir):
@@ -53,10 +65,12 @@ class resPlot:
         print(f"resPlot -> self.work_dir={self.work_dir}\nself.log_file={self.log_file}\nself.iter_dir_list={self.iter_dir_list}")
 
     def lr_plot(self):
+        self.get_log_path()
         y_axis_name = 'lr'
         return self.gr_line_plot(y_axis_name, self.log_file)
 
     def loss_plot(self):
+        self.get_log_path()
         y_axis_name = 'loss'
         return self.gr_line_plot(y_axis_name, self.log_file)
     

@@ -78,10 +78,10 @@ def evaluation_question_number_change_wrap(max_textboxes):
 with gr.Blocks() as demo:
     gr.Markdown(value='''  
 <div align="center">
-  <img src="https://github.com/InternLM/lmdeploy/assets/36994684/0cf8d00f-e86b-40ba-9b54-dc8f1bc6c8d8" width="600"/>
-  <br /><br />    
+  <img src="https://github.com/scchy/XtunerGUI/assets/108343727/93376dab-fae8-46f8-8956-58465cbbcb98" width="1000"/>
+  <br /><br />
                 
-[![GitHub Repo stars](https://img.shields.io/github/stars/InternLM/xtuner?style=social)](https://github.com/InternLM/xtuner/stargazers)                
+[![GitHub Repo stars](https://img.shields.io/github/stars/scchy/XtunerGUI?style=social)](https://github.com/scchy/XtunerGUI/stargazers)                   
                 ''')
     
     with gr.Tab("基础训练"):
@@ -351,15 +351,17 @@ with gr.Blocks() as demo:
                 num_pth_evaluation = gr.Dropdown(label='请选择权重文件', info='可获取模型训练过程中评估问题的结果展示')
                 evaluation_question = gr.TextArea(label='测试问题结果')
                 
-            stop_button.click(PLT.dynamic_drop_down, outputs=num_pth_evaluation, queue=False)
+            stop_button.click(PLT.dynamic_eval_drop_down, outputs=num_pth_evaluation, queue=False)
             show_evaluation_button = gr.Button('微调结果生成')
             show_evaluation_button.click(PLT.reset_work_dir, inputs=[local_path], queue=False)
             show_evaluation_button.click(PLT.lr_plot, outputs=[lr_plot], queue=False)
             show_evaluation_button.click(PLT.loss_plot, outputs=[loss_graph], queue=False)
-            show_evaluation_button.click(PLT.dynamic_drop_down, outputs=num_pth_evaluation, queue=False)
+            # 更新eval的下拉列表
+            show_evaluation_button.click(PLT.dynamic_eval_drop_down, outputs=num_pth_evaluation, queue=False)
+            work_path.change(PLT.dynamic_eval_drop_down, outputs=num_pth_evaluation, queue=False)
             # 找到 & read eval 
             num_pth_evaluation.change(PLT.get_eval_test, inputs=[num_pth_evaluation], outputs=[evaluation_question])
-
+            
         gr.Markdown("## 6. 微调模型转化及测试")
         
         with gr.Accordion(label="模型转换",open=True):

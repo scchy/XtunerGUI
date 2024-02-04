@@ -69,6 +69,9 @@ customer_path
 
 ```
 
+/root/share/model_repos/internlm-chat-7b
+/root/personal_assistant/data/personal_assistant_openai_final.json 
+
 
 ## Test
 - [X] customer-root /root/sccTest3
