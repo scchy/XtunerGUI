@@ -21,12 +21,12 @@ OPENAI_FORMAT = '''
 ]
 '''
 
-def read_first_ten_lines(input_path, upload_path):
+def read_first_ten_lines(input_path, upload_path=None):
     file_path = input_path if len(input_path) >= 3 else upload_path
     try:
         with open(file_path, 'r', encoding='utf-8') as file:
             lines = file.readlines()  # 读取所有行
-            first_ten_lines = lines[:10]  # 获取前十行
+            first_ten_lines = lines[:20]  # 获取前十行
             return ''.join(first_ten_lines)  # 将前十行合并为一个字符串并返回
     except Exception as e:
         return f"Error reading file: {str(e)}"

@@ -27,7 +27,9 @@ MODEL_TO_TEMPLATE = {
     "internlm/internlm-chat-20b": "internlm_chat",
     "huggyllama/llama-7b": "default",
     "meta-llama/Llama-2-7b-hf": "llama2_chat",
+    "meta-llama/Llama-2-7b": "llama2_chat",
     "meta-llama/Llama-2-7b-chat-hf": "llama2_chat",
+    "meta-llama/Llama-2-7b-chat": "llama2_chat",
     "meta-llama/Llama-2-70b-hf": "llama2_chat",
     "lmsys/vicuna-7b-v1.5": "vicuna",
     "lmsys/vicuna-13b-v1.5": "vicuna",
@@ -80,7 +82,8 @@ def data_path_map_fn(file):
             return v
     return None
 
-def mdoel_path_map_fn(file):
+def model_path_map_fn(file):
+    print(f'model_path_map_fn({file})')
     if file in MODEL_TO_TEMPLATE:
         return MODEL_TO_TEMPLATE[file]
     for k, v in MODEL_TO_TEMPLATE.items():
@@ -317,7 +320,7 @@ def build_and_save_config(
         kwargs['dataset'] = dataset_personal_path
     
     # dropdown-list prompt_template
-    prompt_template = mdoel_path_map_fn(kwargs['model_path'])
+    prompt_template = model_path_map_fn(kwargs['model_path'])
     if personal_model is not None and len(personal_model) >= 3:
         kwargs['model_path'] = personal_model
         prompt_template = detect_prompt_template
