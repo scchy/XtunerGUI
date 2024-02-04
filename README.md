@@ -1,8 +1,8 @@
 <div align="center">
-  <img src="https://github.com/InternLM/lmdeploy/assets/36994684/0cf8d00f-e86b-40ba-9b54-dc8f1bc6c8d8" width="600"/>
-  <br /><br />    
+  <img src="https://github.com/scchy/XtunerGUI/assets/108343727/93376dab-fae8-46f8-8956-58465cbbcb98" width="1000"/>
+  <br /><br />
                 
-[![GitHub Repo stars](https://img.shields.io/github/stars/InternLM/xtuner?style=social)](https://github.com/InternLM/xtuner/stargazers)                
+[![GitHub Repo stars](https://img.shields.io/github/stars/scchy/XtunerGUI?style=social)](https://github.com/scchy/XtunerGUI/stargazers)              
 
 <div align="left">
 
