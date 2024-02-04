@@ -86,8 +86,8 @@ class quickTrain:
         self._t_start(1)
         self._t_handle_tr.join()
         if self._break_flag:
-            return f"Done! Xtuner had interrupted!\nRESUME work_dir={self.work_dir}"
-        return self.work_dir
+            return f"Done! Xtuner had interrupted!\nRESUME work_dir={self.work_dir}", self.work_dir
+        return "Success", self.work_dir
     
     def _tail(self, n=100):
         line_list = []

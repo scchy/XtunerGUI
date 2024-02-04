@@ -319,7 +319,7 @@ with gr.Blocks() as demo:
             retry_path_dropdown = gr.Dropdown(label='请选择需要继续训练的权重文件', info='将从训练中断前的模型权重文件进行搜索',interactive=True)
             retry_button = gr.Button('继续训练')
             retry_path_dropdown.change(TR_CLS.reset_resume_from_checkpoint, inputs=[retry_path_dropdown])
-            retry_button.click(TR_CLS.resume_train, outputs=[work_path])
+            retry_button.click(TR_CLS.resume_train, outputs=[tmp_trian_pg_md, work_path])
 
         with gr.Accordion(label="终端界面",open=False):
             log_file = gr.TextArea(label='日志文件打印', info= '点击可查看模型训练信息')        
@@ -333,6 +333,7 @@ with gr.Blocks() as demo:
         )
         # 点击停止训练的时候 retry_path_dropdown 进行更新
         stop_button.click(PLT.dynamic_drop_down, outputs=retry_path_dropdown, queue=False)
+        work_path.change(PLT.dynamic_drop_down, outputs=retry_path_dropdown, queue=False)
         local_path_button.click(PLT.reset_work_dir, inputs=[local_path])
         work_path.change(PLT.reset_work_dir, inputs=[local_path])
         with gr.Tab('训练结果'):
@@ -455,7 +456,7 @@ with gr.Blocks() as demo:
     #with gr.Tab('微调模型测评（OpenCompass）'):
 
     demo.load(TR_CLS.read_log, outputs=[log_file], every=1)
-    demo.launch(share=True, server_name="0.0.0.0", server_port=6007, root_path=f'/proxy/6007/') #, server_name="0.0.0.0", server_port=6006, root_path=f'/proxy/6006/')
+    demo.launch(share=True) #, server_name="0.0.0.0", server_port=6007, root_path=f'/proxy/6007/') #, server_name="0.0.0.0", server_port=6006, root_path=f'/proxy/6006/')
 
 
 

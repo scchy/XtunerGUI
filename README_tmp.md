@@ -72,12 +72,13 @@ customer_path
 
 ## Test
 - [X] customer-root /root/sccTest3
-- [X] customer-data-dir /root/sccTest3/download_cache
+- [X] customer-data-dir /root/download_cache
 - [X] customer model: /root/share/model_repos/internlm-chat-7b
   - [X] check customer model template detect
   - [X] -> detect_prompt_template -> prompt_template_show
-- [X] customer dataset: /root/xtunerUITest/ttt.json
-  - 
+- [X] customer dataset: 
+  - /root/personal_assistant/data/personal_assistant_openai_final.json 
+  - /root/xtunerUITest/ttt.json
 - [X] data: tatsu-lab/alpaca -> downloading
 - [X] config
   - [X] ft_method -> DEFAULT_HYPERPARAMETERS
