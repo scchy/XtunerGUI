@@ -12,12 +12,13 @@ def _convert_and_merged(config_file, pth_model, save_hf_dir, model_path, save_me
     merge(model_path, save_hf_dir, save_merged_dir)
 
 
-def build_convert_and_merged_path(root_dir):
+def build_convert_and_merged_path(root_dir, epoch_pth):
+    epoch = os.path.basename(epoch_pth).split('.')[0]
     work_dir = os.path.join(root_dir, 'work_dir')
     if not os.path.exists(work_dir):
         os.system(f'mkdir -p {work_dir}')
-    hf = os.path.join(work_dir, 'xtuner_hf')
-    mg = os.path.join(work_dir, 'xtuner_merge')
+    hf = os.path.join(work_dir, f'xtuner_{epoch}_hf')
+    mg = os.path.join(work_dir, f'xtuner_{epoch}_merge')
     # clear
     if os.path.exists(hf):
         os.system(f'rm -rf {hf}')
@@ -26,8 +27,10 @@ def build_convert_and_merged_path(root_dir):
     return work_dir, hf, mg
 
 
-def convert_and_merged(root_dir, config_file, epoch_pth, model_path):
-    work_dir, save_hf_dir, save_merged_dir = build_convert_and_merged_path(root_dir)
+def convert_and_merged(root_dir, config_file, epoch_pth, model_path, model_personal_path, ft_method):
+    if len(model_personal_path) >= 3:
+        model_path = model_personal_path
+    work_dir, save_hf_dir, save_merged_dir = build_convert_and_merged_path(root_dir, epoch_pth)
     pth_model = os.path.join(work_dir, epoch_pth)
     print(
         f'config_file = {config_file}'
@@ -36,9 +39,19 @@ def convert_and_merged(root_dir, config_file, epoch_pth, model_path):
         ,f'\nmodel_path ={model_path}' 
         ,f'\nsave_merged_dir ={save_merged_dir}' 
     )
-    convert_to_hf(config_file, pth_model, save_hf_dir)
-    merge(model_path, save_hf_dir, save_merged_dir)
-    return save_merged_dir
+    merged_flag = ft_method != 'full'
+    try:
+        convert_to_hf(config_file, pth_model, save_hf_dir)
+        out_dir = save_hf_dir
+        if merged_flag:
+            merge(model_path, save_hf_dir, save_merged_dir)
+            out_dir = save_merged_dir
+        
+        info = 'Successfully converted model ! '
+    except Exception as e:
+        info = e
+        pass
+    return info, out_dir
 
 
 if __name__ == '__main__':

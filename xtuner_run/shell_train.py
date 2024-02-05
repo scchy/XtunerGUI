@@ -28,9 +28,9 @@ class quickTrain:
         self.remove_log_file()
         print(f'config_py_path={config_py_path}')
     
-    def reset_resume_from_checkpoint(self, work_dir):
-        print(f"reset_resume_from_checkpoint({work_dir})")
-        self.resume_from_checkpoint = work_dir
+    def reset_resume_from_checkpoint(self, ckpt):
+        self.resume_from_checkpoint = f'{self.work_dir}/{ckpt}'
+        print(f"reset_resume_from_checkpoint({self.resume_from_checkpoint})")
     
     def reset_deepspeed(self, deepspeed):
         print(f"reset_deepspeed({deepspeed})")
@@ -78,16 +78,16 @@ class quickTrain:
         self._t_start(0)
         self._t_handle_tr.join()
         if self._break_flag:
-            return f"Done! Xtuner had interrupted!\nwork_dir={self.work_dir}"
-        return self.work_dir
+            return f"Done! Xtuner had interrupted!\nwork_dir={self.work_dir}", self.work_dir
+        return "Success", self.work_dir
 
     def resume_train(self, progress=gr.Progress(track_tqdm=True)):
         self._break_flag = False
         self._t_start(1)
         self._t_handle_tr.join()
         if self._break_flag:
-            return f"Done! Xtuner had interrupted!\nRESUME work_dir={self.work_dir}"
-        return self.work_dir
+            return f"Done! Xtuner had interrupted!\nRESUME work_dir={self.work_dir}", self.work_dir
+        return "Success", self.work_dir
     
     def _tail(self, n=100):
         line_list = []
@@ -126,5 +126,5 @@ class quickTrain:
             self._t_handle_tr = None
      
         self._break_flag = True
-        return f"Done! Xtuner had interrupted!\nwork_dir={self.work_dir}"
+        return f"Done! Xtuner had interrupted!\nwork_dir={self.work_dir}", self.work_dir
 
